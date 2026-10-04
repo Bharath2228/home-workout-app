@@ -72,7 +72,7 @@ fun SettingsScreen(vm: SettingsViewModel = viewModel()) {
                         else -> {
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                 Text("Sync new workouts", modifier = Modifier.weight(1f))
-                                Switch(checked = vm.syncEnabled, onCheckedChange = vm::setSyncEnabled)
+                                Switch(checked = vm.syncEnabled, onCheckedChange = vm::updateSyncEnabled)
                             }
                             OutlinedButton(onClick = vm::syncPast) { Text("Sync past workouts") }
                             if (vm.info != null) Text(vm.info.orEmpty(), style = MaterialTheme.typography.bodySmall)

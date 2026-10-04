@@ -36,11 +36,11 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
         sdkStatus = health.manager.sdkStatus()
         viewModelScope.launch {
             granted = runCatching { health.manager.hasAllPermissions() }.getOrDefault(false)
-            if (!granted && syncEnabled) setSyncEnabled(false)
+            if (!granted && syncEnabled) updateSyncEnabled(false)
         }
     }
 
-    fun setSyncEnabled(value: Boolean) {
+    fun updateSyncEnabled(value: Boolean) {
         syncEnabled = value
         health.enabled = value
     }
