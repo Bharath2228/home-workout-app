@@ -11,11 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
@@ -75,8 +78,31 @@ fun SettingsScreen(vm: SettingsViewModel = viewModel()) {
                                 Switch(checked = vm.syncEnabled, onCheckedChange = vm::updateSyncEnabled)
                             }
                             OutlinedButton(onClick = vm::syncPast) { Text("Sync past workouts") }
-                            if (vm.info != null) Text(vm.info.orEmpty(), style = MaterialTheme.typography.bodySmall)
                         }
+                    }
+                    if (vm.info != null) Text(vm.info.orEmpty(), style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+
+        item {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Body weight", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Used to estimate calories burned. The estimate is rough, not a measurement.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = vm.bodyWeightText,
+                            onValueChange = vm::onBodyWeightChange,
+                            label = { Text("kg") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            modifier = Modifier.weight(1f),
+                        )
+                        Button(onClick = vm::saveBodyWeight) { Text("Save") }
                     }
                 }
             }

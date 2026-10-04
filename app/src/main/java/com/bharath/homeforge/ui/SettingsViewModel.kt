@@ -30,7 +30,28 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
     var info by mutableStateOf<String?>(null)
         private set
 
+    var bodyWeightText by mutableStateOf(health.bodyWeightKg?.let(::formatKg).orEmpty())
+        private set
+
     val available: Boolean get() = sdkStatus == HealthConnectClient.SDK_AVAILABLE
+
+    fun onBodyWeightChange(value: String) {
+        bodyWeightText = value
+    }
+
+    fun saveBodyWeight() {
+        val kg = bodyWeightText.replace(',', '.').toDoubleOrNull()
+        if (kg == null || kg < 20.0 || kg > 300.0) {
+            info = "Enter a body weight between 20 and 300 kg."
+            return
+        }
+        viewModelScope.launch {
+            info = runCatching {
+                if (health.saveBodyWeight(kg)) "Body weight saved and sent to Health Connect."
+                else "Body weight saved. Connect Health Connect to send it there."
+            }.getOrElse { "Saved locally, Health Connect write failed: ${it.message}" }
+        }
+    }
 
     fun refresh() {
         sdkStatus = health.manager.sdkStatus()
