@@ -24,10 +24,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.bharath.homeforge.domain.Goal
+import com.bharath.homeforge.domain.Level
+import com.bharath.homeforge.domain.LevelProgress
+import com.bharath.homeforge.domain.Split
 
 @Composable
-fun OnboardingScreen(onDone: (openSettings: Boolean, goal: Goal) -> Unit) {
+fun OnboardingScreen(onDone: (openSettings: Boolean, goal: Goal, program: Split, level: Level) -> Unit) {
+    var level by remember { mutableStateOf(Level.BEGINNER) }
+    val experienceLabels = listOf("New to lifting", "Trained on and off", "Train regularly for a year or more")
     var goal by remember { mutableStateOf(Goal.MUSCLE_GAIN) }
+    var program by remember { mutableStateOf(Split.FULL_BODY) }
+    val daysLabels = listOf("2 to 3 days a week", "3 to 4 days a week", "5 to 6 days a week")
 
     Surface(Modifier.fillMaxSize()) {
         Column(
@@ -51,14 +58,56 @@ fun OnboardingScreen(onDone: (openSettings: Boolean, goal: Goal) -> Unit) {
             )
             Section(
                 "Plan, log, progress",
-                "Pick a routine, log your sets, and the app suggests a heavier weight once you hit the top of " +
-                    "the rep range on every set. Swap, reorder or add exercises whenever you like.",
+                "Pick a plan, and the app tells you which workout is next. Log your sets, and it suggests a " +
+                    "heavier weight once you hit the top of the rep range on every set. Swap, reorder or add " +
+                    "exercises whenever you like.",
             )
             Section(
                 "Health Connect (optional)",
                 "Send finished workouts to Health Connect from Settings. Calories are a rough estimate " +
                     "based on your body weight.",
             )
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("How much have you trained?", style = MaterialTheme.typography.titleMedium)
+                Row(
+                    Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Level.entries.forEachIndexed { index, option ->
+                        FilterChip(
+                            selected = option == level,
+                            onClick = { level = option },
+                            label = { Text(experienceLabels[index]) },
+                        )
+                    }
+                }
+                Text("${level.label}: ${level.description}", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    "You move up automatically as you complete workouts: " +
+                        "${LevelProgress.INTERMEDIATE_AT} to reach Intermediate, ${LevelProgress.ADVANCED_AT} for Advanced.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("How many days a week can you train?", style = MaterialTheme.typography.titleMedium)
+                Row(
+                    Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Split.programs.forEachIndexed { index, option ->
+                        FilterChip(
+                            selected = option == program,
+                            onClick = { program = option },
+                            label = { Text(daysLabels[index]) },
+                        )
+                    }
+                }
+                Text("${program.label}: ${program.tagline}", style = MaterialTheme.typography.bodyMedium)
+                Text("Best for: ${program.bestFor}", style = MaterialTheme.typography.bodySmall)
+                Text("You can change your plan any time on the Routines tab.", style = MaterialTheme.typography.bodySmall)
+            }
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Your goal", style = MaterialTheme.typography.titleMedium)
@@ -78,10 +127,10 @@ fun OnboardingScreen(onDone: (openSettings: Boolean, goal: Goal) -> Unit) {
                 Text("You can change this later in Settings.", style = MaterialTheme.typography.bodySmall)
             }
 
-            Button(onClick = { onDone(true, goal) }, modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = { onDone(true, goal, program, level) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Check my plates and rod weight")
             }
-            OutlinedButton(onClick = { onDone(false, goal) }, modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(onClick = { onDone(false, goal, program, level) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Start with the defaults")
             }
         }

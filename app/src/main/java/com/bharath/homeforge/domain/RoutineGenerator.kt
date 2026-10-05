@@ -1,12 +1,48 @@
 package com.bharath.homeforge.domain
 
-enum class Split(val label: String, val dayNames: List<String>) {
-    FULL_BODY("Full body", listOf("Day A", "Day B", "Day C")),
-    PUSH_PULL_LEGS("Push / Pull / Legs", listOf("Push", "Pull", "Legs")),
-    SIX_DAY_PPL("6-day PPL", listOf("Push A", "Pull A", "Legs A", "Push B", "Pull B", "Legs B")),
+enum class Split(
+    val label: String,
+    val dayNames: List<String>,
+    val tagline: String,
+    val bestFor: String,
+    val schedule: String,
+) {
+    FULL_BODY(
+        "Full body",
+        listOf("Day 1", "Day 2", "Day 3"),
+        "Every workout trains your whole body.",
+        "Beginners, or anyone who can train 2 to 3 days a week.",
+        "3 days a week with a rest day between, such as Monday, Wednesday and Friday.",
+    ),
+    PUSH_PULL_LEGS(
+        "Push / Pull / Legs",
+        listOf("Push", "Pull", "Legs"),
+        "Pushing muscles, pulling muscles and legs each get their own day.",
+        "Lifters who can train 3 to 4 days a week and want more work per muscle.",
+        "Do them in order and repeat: Push, Pull, Legs, then Push again.",
+    ),
+    SIX_DAY_PPL(
+        "6-day PPL",
+        listOf("Push 1", "Pull 1", "Legs 1", "Push 2", "Pull 2", "Legs 2"),
+        "Push, pull and legs twice a week, with different exercises the second time.",
+        "Experienced lifters who can train 5 to 6 days a week and recover well.",
+        "6 days a week with one rest day. Do not skip your rest day.",
+    ),
 
     /** An optional extra session for a rest day; every other split already ends with core work. */
-    CORE_DAY("Core day", listOf("Core")),
+    CORE_DAY(
+        "Core day",
+        listOf("Core"),
+        "An extra session that only trains your abs.",
+        "An optional add-on for a rest day, on top of any plan.",
+        "15 to 20 minutes, any time.",
+    ),
+    ;
+
+    companion object {
+        /** The plans a user can follow. The core day is an extra, not a plan. */
+        val programs: List<Split> = listOf(FULL_BODY, PUSH_PULL_LEGS, SIX_DAY_PPL)
+    }
 }
 
 data class Slot(
@@ -101,7 +137,7 @@ object RoutineGenerator {
             Slot(Movement.HORIZONTAL_PUSH, 3, 8..10, pick = 2),
             Slot(Movement.VERTICAL_PUSH, 3, 10..12, pick = 1),
             Slot(Movement.SHOULDER_ISOLATION, 3, 12..15, pick = 1),
-            Slot(Movement.TRICEP, 3, 10..12, pick = 2),
+            Slot(Movement.TRICEP, 3, 10..12, pick = 1),
             Slot(Movement.TRICEP, 2, 10..12),
             Slot(Movement.CORE, 3, 12..15, pick = 5),
         )
@@ -132,9 +168,11 @@ object RoutineGenerator {
         pickOffsets: Map<Int, Int> = emptyMap(),
         rotation: Int = 0,
         goal: Goal = Goal.MUSCLE_GAIN,
+        level: Level = Level.INTERMEDIATE,
+        noEquipment: Boolean = false,
     ): Routine {
         val items = slots(split, dayIndex).mapIndexed { index, slot ->
-            val candidates = ExerciseLibrary.forMovement(slot.movement)
+            val candidates = ExerciseLibrary.poolFor(slot.movement, level, noEquipment)
             val exercise = candidates[(slot.pick + rotation + (pickOffsets[index] ?: 0)) % candidates.size]
             // Core slots hold either seconds or reps depending on which exercise lands in them.
             val designed = when {
@@ -145,9 +183,9 @@ object RoutineGenerator {
             PlannedExercise(
                 slotIndex = index,
                 exercise = exercise,
-                sets = slot.sets,
+                sets = level.setsFor(slot.sets),
                 reps = GoalProfile.reps(goal, exercise.movement, designed, exercise.timed),
-                weightKg = exercise.rig?.let { LoadCalculator.snap(equipment, it, exercise.startKg) },
+                weightKg = exercise.rig?.let { LoadCalculator.snap(equipment, it, exercise.startKg * level.startFactor) },
                 restSeconds = GoalProfile.restSeconds(goal, exercise.movement),
             )
         }

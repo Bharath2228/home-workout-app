@@ -1,6 +1,5 @@
 package com.bharath.homeforge.ui.screens
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,22 +9,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -40,28 +35,34 @@ import com.bharath.homeforge.domain.PlateLoader
 import com.bharath.homeforge.domain.Rig
 import com.bharath.homeforge.domain.Rotation
 import com.bharath.homeforge.domain.RoutineGenerator
-import com.bharath.homeforge.domain.Split
 import com.bharath.homeforge.ui.RoutinesViewModel
 import com.bharath.homeforge.ui.formatClock
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RoutinesScreen(vm: RoutinesViewModel = viewModel()) {
+fun RoutinesScreen(onOpenExercise: (String) -> Unit, onOpenCalendar: () -> Unit, vm: RoutinesViewModel = viewModel()) {
     val equipment by vm.equipment.collectAsStateWithLifecycle()
     val swaps by vm.swaps.collectAsStateWithLifecycle()
     val rotation by vm.rotation.collectAsStateWithLifecycle()
     val userPrefs by vm.userPrefs.collectAsStateWithLifecycle()
-    var splitName by rememberSaveable { mutableStateOf(Split.FULL_BODY.name) }
-    var dayIndex by rememberSaveable { mutableIntStateOf(0) }
+    val schedule by vm.schedule.collectAsStateWithLifecycle()
+    val levelStatus by vm.levelStatus.collectAsStateWithLifecycle()
+    val nextDay = schedule.nextDayIndex
 
-    val split = Split.valueOf(splitName)
+    val program = userPrefs.program
+    var chosenTab by rememberSaveable(program) { mutableStateOf<Int?>(null) }
+    var picking by remember { mutableStateOf(false) }
+
+    val tab = chosenTab ?: nextDay
+    val active = activeDay(program, tab)
     val routine = RoutineGenerator.generate(
-        split,
-        dayIndex,
+        active.split,
+        active.dayIndex,
         equipment,
-        SwapRepository.offsetsFor(swaps, split, dayIndex),
+        SwapRepository.offsetsFor(swaps, active.split, active.dayIndex),
         rotation.block(),
         userPrefs.goal,
+        levelStatus.level,
+        userPrefs.noEquipment,
     )
 
     Column(Modifier.fillMaxSize().padding(top = 16.dp)) {
@@ -78,39 +79,23 @@ fun RoutinesScreen(vm: RoutinesViewModel = viewModel()) {
             )
         }
 
-        Row(
-            Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Split.entries.forEach { option ->
-                FilterChip(
-                    selected = option == split,
-                    onClick = {
-                        splitName = option.name
-                        dayIndex = 0
-                    },
-                    label = { Text(option.label) },
-                )
-            }
-        }
+        PlanHeader(
+            program = program,
+            headline = scheduleHeadline(program, schedule, userPrefs.startEpochDay),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            onChangePlan = { picking = true },
+            onOpenCalendar = onOpenCalendar,
+        )
 
-        if (split == Split.CORE_DAY) {
-            Text(
-                "An optional extra session for a rest day. It doesn't count toward your rest-day warnings or streak.",
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-        }
+        LevelAndGearRow(
+            status = levelStatus,
+            noEquipment = userPrefs.noEquipment,
+            onNoEquipmentChange = vm::setNoEquipment,
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
 
-        PrimaryScrollableTabRow(selectedTabIndex = dayIndex, edgePadding = 0.dp) {
-            split.dayNames.forEachIndexed { index, name ->
-                Tab(
-                    selected = index == dayIndex,
-                    onClick = { dayIndex = index },
-                    text = { Text(name) },
-                )
-            }
-        }
+        PlanDayTabs(program, tab, nextDay) { chosenTab = it }
+        DayInfo(active, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -118,14 +103,34 @@ fun RoutinesScreen(vm: RoutinesViewModel = viewModel()) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             items(routine.items, key = { it.slotIndex }) { item ->
-                ExerciseCard(item, equipment) { vm.swap(split, dayIndex, item.slotIndex) }
+                ExerciseCard(
+                    item = item,
+                    equipment = equipment,
+                    onInfo = { onOpenExercise(item.exercise.name) },
+                    onSwap = { vm.swap(active.split, active.dayIndex, item.slotIndex) },
+                )
             }
         }
+    }
+
+    if (levelStatus.level.ordinal > userPrefs.lastAnnouncedLevel.ordinal) {
+        LevelUpDialog(levelStatus.level) { vm.acknowledgeLevel(levelStatus.level) }
+    }
+
+    if (picking) {
+        ProgramPickerDialog(
+            current = program,
+            onPick = {
+                vm.setProgram(it)
+                picking = false
+            },
+            onDismiss = { picking = false },
+        )
     }
 }
 
 @Composable
-private fun ExerciseCard(item: PlannedExercise, equipment: Equipment, onSwap: () -> Unit) {
+private fun ExerciseCard(item: PlannedExercise, equipment: Equipment, onInfo: () -> Unit, onSwap: () -> Unit) {
     Card(Modifier.fillMaxWidth()) {
         Row(
             Modifier.padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 4.dp),
@@ -142,6 +147,9 @@ private fun ExerciseCard(item: PlannedExercise, equipment: Equipment, onSwap: ()
                 val rig = item.exercise.rig
                 val plates = if (rig != null && item.weightKg != null) PlateLoader.describe(equipment, rig, item.weightKg) else null
                 if (plates != null) Text(plates, style = MaterialTheme.typography.bodySmall)
+            }
+            IconButton(onClick = onInfo) {
+                Icon(Icons.Filled.Info, contentDescription = "How to do ${item.exercise.name}")
             }
             IconButton(onClick = onSwap) {
                 Icon(Icons.Filled.SwapHoriz, contentDescription = "Swap exercise")

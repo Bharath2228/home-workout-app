@@ -81,6 +81,9 @@ abstract class WorkoutDao {
     @Query("SELECT * FROM sessions ORDER BY startedAt DESC")
     abstract fun observeSessions(): Flow<List<WorkoutSession>>
 
+    @Query("SELECT * FROM sessions WHERE splitName = :splitName AND startedAt >= :sinceMillis ORDER BY startedAt")
+    abstract fun observeProgramSessions(splitName: String, sinceMillis: Long): Flow<List<WorkoutSession>>
+
     @Query("DELETE FROM sessions WHERE id = :id")
     abstract suspend fun deleteSession(id: Long)
 
@@ -107,4 +110,8 @@ abstract class WorkoutDao {
 
     @Query("SELECT COUNT(*) FROM sessions")
     abstract fun observeSessionCount(): Flow<Int>
+
+    /** Completed workouts that count toward your level. The optional core day is an extra and doesn't. */
+    @Query("SELECT COUNT(*) FROM sessions WHERE splitName != 'CORE_DAY'")
+    abstract fun observeWorkoutCount(): Flow<Int>
 }

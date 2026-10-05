@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -49,7 +50,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bharath.homeforge.domain.Equipment
 import com.bharath.homeforge.domain.Exercise
 import com.bharath.homeforge.domain.ExerciseLibrary
+import com.bharath.homeforge.domain.LevelStatus
 import com.bharath.homeforge.domain.PlateLoader
+import com.bharath.homeforge.domain.ScheduleResult
 import com.bharath.homeforge.domain.Split
 import com.bharath.homeforge.domain.WarmUp
 import com.bharath.homeforge.ui.formatKg
@@ -60,16 +63,30 @@ import com.bharath.homeforge.ui.formatClock
 import com.bharath.homeforge.ui.WorkoutDraft
 
 @Composable
-fun LogScreen(vm: LogViewModel = viewModel()) {
+fun LogScreen(onOpenExercise: (String) -> Unit, vm: LogViewModel = viewModel()) {
     val workout = vm.workout
     val equipment by vm.equipment.collectAsStateWithLifecycle()
     val warnings by vm.warnings.collectAsStateWithLifecycle()
+    val userPrefs by vm.userPrefs.collectAsStateWithLifecycle()
+    val schedule by vm.schedule.collectAsStateWithLifecycle()
+    val levelStatus by vm.levelStatus.collectAsStateWithLifecycle()
     if (workout == null) {
-        StartPane(message = vm.message, warnings = warnings, onStart = vm::start)
+        StartPane(
+            program = userPrefs.program,
+            schedule = schedule,
+            startEpochDay = userPrefs.startEpochDay,
+            levelStatus = levelStatus,
+            noEquipment = userPrefs.noEquipment,
+            onNoEquipmentChange = vm::setNoEquipment,
+            message = vm.message,
+            warnings = warnings,
+            onStart = vm::start,
+        )
     } else {
         WorkoutPane(
             workout = workout,
             equipment = equipment,
+            noEquipment = userPrefs.noEquipment,
             message = vm.message,
             onFinish = vm::finish,
             onCancel = vm::cancel,
@@ -82,16 +99,27 @@ fun LogScreen(vm: LogViewModel = viewModel()) {
             onAddRest = vm::addRest,
             onSkipRest = vm::skipRest,
             onSetDone = { vm.startRest(it.planned.restSeconds) },
+            onOpenExercise = onOpenExercise,
         )
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun StartPane(message: String?, warnings: List<String>, onStart: (Split, Int) -> Unit) {
-    var splitName by rememberSaveable { mutableStateOf(Split.FULL_BODY.name) }
-    var dayIndex by rememberSaveable { mutableIntStateOf(0) }
-    val split = Split.valueOf(splitName)
+private fun StartPane(
+    program: Split,
+    schedule: ScheduleResult,
+    startEpochDay: Long,
+    levelStatus: LevelStatus,
+    noEquipment: Boolean,
+    onNoEquipmentChange: (Boolean) -> Unit,
+    message: String?,
+    warnings: List<String>,
+    onStart: (Split, Int) -> Unit,
+) {
+    val nextDay = schedule.nextDayIndex
+    var chosenTab by rememberSaveable(program) { mutableStateOf<Int?>(null) }
+    val tab = chosenTab ?: nextDay
+    val active = activeDay(program, tab)
 
     Column(Modifier.fillMaxSize().padding(top = 16.dp)) {
         Text(
@@ -99,35 +127,28 @@ private fun StartPane(message: String?, warnings: List<String>, onStart: (Split,
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(horizontal = 16.dp),
         )
-        Row(
-            Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Split.entries.forEach { option ->
-                FilterChip(
-                    selected = option == split,
-                    onClick = {
-                        splitName = option.name
-                        dayIndex = 0
-                    },
-                    label = { Text(option.label) },
-                )
-            }
-        }
-        PrimaryScrollableTabRow(selectedTabIndex = dayIndex, edgePadding = 0.dp) {
-            split.dayNames.forEachIndexed { index, name ->
-                Tab(selected = index == dayIndex, onClick = { dayIndex = index }, text = { Text(name) })
-            }
-        }
+        PlanHeader(
+            program = program,
+            headline = scheduleHeadline(program, schedule, startEpochDay),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        )
+        LevelAndGearRow(
+            status = levelStatus,
+            noEquipment = noEquipment,
+            onNoEquipmentChange = onNoEquipmentChange,
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
+        PlanDayTabs(program, tab, nextDay) { chosenTab = it }
+        DayInfo(active, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             WarningsCard(warnings)
             Text(
-                "Uses the exercises shown on the Routines tab, including any swaps you made. " +
+                "Uses the exercises on the Routines tab, including your swaps. Change your plan there. " +
                     "Weights and sets adapt to how your last sessions went.",
                 style = MaterialTheme.typography.bodySmall,
             )
-            Button(onClick = { onStart(split, dayIndex) }, modifier = Modifier.fillMaxWidth()) {
-                Text("Start workout")
+            Button(onClick = { onStart(active.split, active.dayIndex) }, modifier = Modifier.fillMaxWidth()) {
+                Text("Start ${active.split.dayNames[active.dayIndex]}")
             }
             if (message != null) Text(message, style = MaterialTheme.typography.bodyMedium)
         }
@@ -138,6 +159,7 @@ private fun StartPane(message: String?, warnings: List<String>, onStart: (Split,
 private fun WorkoutPane(
     workout: WorkoutDraft,
     equipment: Equipment,
+    noEquipment: Boolean,
     message: String?,
     onFinish: () -> Unit,
     onCancel: () -> Unit,
@@ -150,6 +172,7 @@ private fun WorkoutPane(
     onAddRest: (Int) -> Unit,
     onSkipRest: () -> Unit,
     onSetDone: (ExerciseDraft) -> Unit,
+    onOpenExercise: (String) -> Unit,
 ) {
     var picking by remember { mutableStateOf(false) }
     val warmUpIndex = workout.exercises.indexOfFirst { WarmUp.eligible(it.planned.exercise) }
@@ -204,6 +227,7 @@ private fun WorkoutPane(
                     onAddSet = { onAddSet(exercise) },
                     onRemoveSet = { onRemoveSet(exercise) },
                     onSetDone = { onSetDone(exercise) },
+                    onInfo = { onOpenExercise(exercise.planned.exercise.name) },
                 )
             }
             item {
@@ -216,6 +240,7 @@ private fun WorkoutPane(
 
     if (picking) {
         ExercisePicker(
+            noEquipment = noEquipment,
             onPick = {
                 onAddExercise(it)
                 picking = false
@@ -226,13 +251,13 @@ private fun WorkoutPane(
 }
 
 @Composable
-private fun ExercisePicker(onPick: (Exercise) -> Unit, onDismiss: () -> Unit) {
+private fun ExercisePicker(noEquipment: Boolean, onPick: (Exercise) -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Add exercise") },
         text = {
             LazyColumn(Modifier.height(360.dp)) {
-                itemsIndexed(ExerciseLibrary.all.sortedBy { it.name }) { _, exercise ->
+                itemsIndexed(ExerciseLibrary.all.filter { !noEquipment || it.equipmentFree }.sortedBy { it.name }) { _, exercise ->
                     TextButton(onClick = { onPick(exercise) }, modifier = Modifier.fillMaxWidth()) {
                         Text(exercise.name, modifier = Modifier.fillMaxWidth())
                     }
@@ -256,6 +281,7 @@ private fun ExerciseLog(
     onAddSet: () -> Unit,
     onRemoveSet: () -> Unit,
     onSetDone: () -> Unit,
+    onInfo: () -> Unit,
 ) {
     val planned = exercise.planned
     val unit = if (planned.exercise.timed) "sec" else "reps"
@@ -289,6 +315,9 @@ private fun ExerciseLog(
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }
+                }
+                IconButton(onClick = onInfo) {
+                    Icon(Icons.Filled.Info, contentDescription = "How to do ${planned.exercise.name}")
                 }
                 IconButton(onClick = onMoveUp, enabled = canMoveUp) {
                     Icon(Icons.Filled.ArrowUpward, contentDescription = "Move up")

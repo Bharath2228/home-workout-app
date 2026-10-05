@@ -67,7 +67,7 @@ class RoutineGeneratorTest {
         val swapped = RoutineGenerator.generate(Split.FULL_BODY, 0, equipment, mapOf(0 to 1))
         assertTrue(base.items[0].exercise != swapped.items[0].exercise)
 
-        val count = ExerciseLibrary.forMovement(base.items[0].exercise.movement).size
+        val count = ExerciseLibrary.poolFor(base.items[0].exercise.movement, Level.INTERMEDIATE, false).size
         val wrapped = RoutineGenerator.generate(Split.FULL_BODY, 0, equipment, mapOf(0 to count))
         assertEquals(base.items[0].exercise, wrapped.items[0].exercise)
     }

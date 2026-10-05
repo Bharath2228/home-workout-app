@@ -18,12 +18,18 @@ import com.bharath.homeforge.data.RotationRepository
 import com.bharath.homeforge.data.RotationState
 import com.bharath.homeforge.data.UserPrefs
 import com.bharath.homeforge.data.UserPrefsRepository
+import com.bharath.homeforge.data.observeLevelStatus
 import com.bharath.homeforge.domain.Equipment
 import com.bharath.homeforge.domain.Goal
+import com.bharath.homeforge.domain.Level
+import com.bharath.homeforge.domain.LevelProgress
+import com.bharath.homeforge.domain.LevelStatus
 import com.bharath.homeforge.reminders.ReminderScheduler
 import com.bharath.homeforge.domain.Plate
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -81,6 +87,29 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
     private val userPrefsRepo = UserPrefsRepository.get(app)
     val userPrefs: StateFlow<UserPrefs> = userPrefsRepo.userPrefs
 
+    val levelStatus: StateFlow<LevelStatus> = dao
+        .observeLevelStatus(userPrefsRepo.userPrefs)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LevelStatus.Initial)
+
+    fun setLevel(level: Level) {
+        userPrefsRepo.update { it.copy(level = level) }
+        announceCurrentLevel()
+    }
+
+    fun setAutoLevel(enabled: Boolean) {
+        userPrefsRepo.update { it.copy(autoLevel = enabled) }
+        announceCurrentLevel()
+    }
+
+    fun setNoEquipment(value: Boolean) = userPrefsRepo.update { it.copy(noEquipment = value) }
+
+    /** Changing the level by hand shouldn't trigger the "you reached a new level" message. */
+    private fun announceCurrentLevel() {
+        val prefs = userPrefsRepo.userPrefs.value
+        val current = LevelProgress.status(prefs.level, prefs.autoLevel, levelStatus.value.workouts).level
+        userPrefsRepo.update { it.copy(lastAnnouncedLevel = current) }
+    }
+
     var reminderMessage by mutableStateOf<String?>(null)
         private set
 
@@ -96,14 +125,6 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
 
     fun onNotificationPermissionDenied() {
         reminderMessage = "Notifications are blocked. Allow them in the phone's app settings to get reminders."
-    }
-
-    fun toggleReminderDay(day: Int) {
-        userPrefsRepo.update {
-            val days = if (day in it.reminderDays) it.reminderDays - day else it.reminderDays + day
-            it.copy(reminderDays = days)
-        }
-        ReminderScheduler.schedule(getApplication())
     }
 
     fun setReminderTime(hour: Int, minute: Int) {

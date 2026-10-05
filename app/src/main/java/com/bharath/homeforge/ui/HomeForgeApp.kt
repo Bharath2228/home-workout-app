@@ -1,6 +1,7 @@
 package com.bharath.homeforge.ui
 
 import android.content.Context
+import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EditNote
@@ -22,12 +23,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.bharath.homeforge.data.UserPrefsRepository
 import com.bharath.homeforge.reminders.ReminderScheduler
+import com.bharath.homeforge.ui.screens.CalendarScreen
+import com.bharath.homeforge.ui.screens.CreditsScreen
+import com.bharath.homeforge.ui.screens.ExerciseDetailScreen
 import com.bharath.homeforge.ui.screens.HistoryScreen
 import com.bharath.homeforge.ui.screens.LogScreen
 import com.bharath.homeforge.ui.screens.OnboardingScreen
@@ -36,6 +42,9 @@ import com.bharath.homeforge.ui.screens.RoutinesScreen
 import com.bharath.homeforge.ui.screens.SettingsScreen
 
 private const val HISTORY_ROUTE = "history"
+private const val EXERCISE_ROUTE = "exercise"
+private const val CREDITS_ROUTE = "credits"
+private const val CALENDAR_ROUTE = "calendar"
 
 private enum class Tab(val route: String, val label: String, val icon: ImageVector) {
     Routines("routines", "Routines", Icons.Filled.FitnessCenter),
@@ -55,8 +64,11 @@ fun HomeForgeApp() {
 
     if (showOnboarding) {
         OnboardingScreen(
-            onDone = { openSettings, goal ->
-                UserPrefsRepository.get(context).update { it.copy(goal = goal) }
+            onDone = { openSettings, goal, program, level ->
+                UserPrefsRepository.get(context).apply {
+                    update { it.copy(goal = goal, level = level, lastAnnouncedLevel = level) }
+                    choosePlan(program)
+                }
                 prefs.edit().putBoolean("onboarded", true).apply()
                 if (openSettings) startRoute = Tab.Settings.route
                 showOnboarding = false
@@ -99,14 +111,38 @@ private fun MainScaffold(startRoute: String) {
             startDestination = startRoute,
             modifier = Modifier.padding(padding),
         ) {
-            composable(Tab.Routines.route) { RoutinesScreen() }
-            composable(Tab.Log.route) { LogScreen() }
+            composable(Tab.Routines.route) {
+                RoutinesScreen(
+                    onOpenExercise = { navController.navigate("$EXERCISE_ROUTE/${Uri.encode(it)}") },
+                    onOpenCalendar = { navController.navigate(CALENDAR_ROUTE) },
+                )
+            }
+            composable(Tab.Log.route) {
+                LogScreen(onOpenExercise = { navController.navigate("$EXERCISE_ROUTE/${Uri.encode(it)}") })
+            }
             composable(Tab.Progress.route) {
                 ProgressScreen(onOpenHistory = { navController.navigate(HISTORY_ROUTE) })
             }
-            composable(Tab.Settings.route) { SettingsScreen() }
+            composable(Tab.Settings.route) {
+                SettingsScreen(onOpenCredits = { navController.navigate(CREDITS_ROUTE) })
+            }
             composable(HISTORY_ROUTE) {
                 HistoryScreen(onBack = { navController.popBackStack() })
+            }
+            composable(
+                route = "$EXERCISE_ROUTE/{name}",
+                arguments = listOf(navArgument("name") { type = NavType.StringType }),
+            ) { entry ->
+                ExerciseDetailScreen(
+                    name = entry.arguments?.getString("name").orEmpty(),
+                    onBack = { navController.popBackStack() },
+                )
+            }
+            composable(CREDITS_ROUTE) {
+                CreditsScreen(onBack = { navController.popBackStack() })
+            }
+            composable(CALENDAR_ROUTE) {
+                CalendarScreen(onBack = { navController.popBackStack() })
             }
         }
     }

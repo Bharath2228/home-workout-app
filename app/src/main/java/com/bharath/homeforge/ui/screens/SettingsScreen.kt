@@ -55,6 +55,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bharath.homeforge.data.HealthConnectManager
 import com.bharath.homeforge.domain.Goal
+import com.bharath.homeforge.domain.Level
+import com.bharath.homeforge.domain.LevelProgress
 import com.bharath.homeforge.domain.LoadCalculator
 import com.bharath.homeforge.domain.Rig
 import com.bharath.homeforge.domain.Rotation
@@ -66,10 +68,11 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
-fun SettingsScreen(vm: SettingsViewModel = viewModel()) {
+fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel()) {
     val equipment by vm.equipment.collectAsStateWithLifecycle()
     val rotation by vm.rotation.collectAsStateWithLifecycle()
     val userPrefs by vm.userPrefs.collectAsStateWithLifecycle()
+    val levelStatus by vm.levelStatus.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) vm.setRemindersEnabled(true) else vm.onNotificationPermissionDenied()
@@ -165,6 +168,19 @@ fun SettingsScreen(vm: SettingsViewModel = viewModel()) {
         item {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("About the pictures", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Exercise pictures come from the wger.de exercise database under Creative Commons licenses.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    OutlinedButton(onClick = onOpenCredits) { Text("Picture credits") }
+                }
+            }
+        }
+
+        item {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Backup", style = MaterialTheme.typography.titleMedium)
                     Text(
                         "Your workouts, measurements and equipment live only on this phone. " +
@@ -178,6 +194,41 @@ fun SettingsScreen(vm: SettingsViewModel = viewModel()) {
                         OutlinedButton(onClick = { importLauncher.launch(arrayOf("*/*")) }) { Text("Import") }
                     }
                     if (vm.backupMessage != null) Text(vm.backupMessage.orEmpty(), style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+
+        item {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Level and equipment", style = MaterialTheme.typography.titleMedium)
+                    Text(levelText(levelStatus), style = MaterialTheme.typography.bodyMedium)
+                    Text(levelStatus.level.description, style = MaterialTheme.typography.bodySmall)
+                    Text("Your starting level", style = MaterialTheme.typography.labelLarge)
+                    Row(
+                        Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Level.entries.forEach { option ->
+                            FilterChip(
+                                selected = option == userPrefs.level,
+                                onClick = { vm.setLevel(option) },
+                                label = { Text(option.label) },
+                            )
+                        }
+                    }
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "Level up automatically: ${LevelProgress.INTERMEDIATE_AT} workouts to Intermediate, " +
+                                "${LevelProgress.ADVANCED_AT} to Advanced",
+                            modifier = Modifier.weight(1f),
+                        )
+                        Switch(checked = userPrefs.autoLevel, onCheckedChange = vm::setAutoLevel)
+                    }
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text("No equipment (bodyweight exercises only)", modifier = Modifier.weight(1f))
+                        Switch(checked = userPrefs.noEquipment, onCheckedChange = vm::setNoEquipment)
+                    }
                 }
             }
         }
@@ -225,20 +276,10 @@ fun SettingsScreen(vm: SettingsViewModel = viewModel()) {
                         )
                     }
                     if (userPrefs.remindersEnabled) {
-                        Row(
-                            Modifier.horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            (1..7).forEach { day ->
-                                FilterChip(
-                                    selected = day in userPrefs.reminderDays,
-                                    onClick = { vm.toggleReminderDay(day) },
-                                    label = {
-                                        Text(DayOfWeek.of(day).getDisplayName(TextStyle.SHORT, Locale.getDefault()))
-                                    },
-                                )
-                            }
-                        }
+                        Text(
+                            "Reminders come on your training days. Change those days on the Calendar.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
                         OutlinedButton(onClick = {
                             TimePickerDialog(
                                 context,

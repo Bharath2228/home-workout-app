@@ -21,16 +21,18 @@ object Adaptation {
         history: List<List<SetResult>>,
         plannedSets: Int,
         reps: IntRange,
+        startFactor: Double = 1.0,
     ): Suggestion {
         val rig = exercise.rig
+        val startKg = exercise.startKg * startFactor
         if (history.isEmpty()) {
-            return Suggestion(rig?.let { LoadCalculator.snap(equipment, it, exercise.startKg) }, plannedSets, reps, null)
+            return Suggestion(rig?.let { LoadCalculator.snap(equipment, it, startKg) }, plannedSets, reps, null)
         }
         val last = history.first()
         if (rig == null) return bodyweight(exercise, last, plannedSets, reps)
 
         val lastWeight = last.mapNotNull { it.weightKg }.maxOrNull()
-            ?: return Suggestion(LoadCalculator.snap(equipment, rig, exercise.startKg), plannedSets, reps, null)
+            ?: return Suggestion(LoadCalculator.snap(equipment, rig, startKg), plannedSets, reps, null)
         // Equipment may have changed since last time, so start from the nearest weight you can still build.
         val base = LoadCalculator.snap(equipment, rig, lastWeight)
 

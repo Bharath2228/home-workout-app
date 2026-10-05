@@ -20,7 +20,7 @@ object ReminderScheduler {
 
         val prefs = UserPrefsRepository.get(app).userPrefs.value
         if (!prefs.remindersEnabled) return
-        val next = ReminderTime.next(prefs.reminderDays, prefs.reminderHour, prefs.reminderMinute, LocalDateTime.now())
+        val next = ReminderTime.next(prefs.trainingDays, prefs.reminderHour, prefs.reminderMinute, LocalDateTime.now())
             ?: return
         val millis = next.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
         // Inexact on purpose: exact alarms need a special permission, and a few minutes of drift is fine here.

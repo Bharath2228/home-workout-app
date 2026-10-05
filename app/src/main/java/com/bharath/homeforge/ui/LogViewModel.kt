@@ -21,21 +21,28 @@ import com.bharath.homeforge.data.RotationRepository
 import com.bharath.homeforge.data.SwapRepository
 import com.bharath.homeforge.data.UserPrefsRepository
 import com.bharath.homeforge.data.WorkoutSession
+import com.bharath.homeforge.data.UserPrefs
+import com.bharath.homeforge.data.observeLevelStatus
 import com.bharath.homeforge.data.observeReadiness
+import com.bharath.homeforge.data.observeSchedule
 import com.bharath.homeforge.domain.Adaptation
 import com.bharath.homeforge.domain.Effort
 import com.bharath.homeforge.domain.Equipment
 import com.bharath.homeforge.domain.Exercise
 import com.bharath.homeforge.domain.GoalProfile
+import com.bharath.homeforge.domain.Level
+import com.bharath.homeforge.domain.LevelStatus
 import com.bharath.homeforge.domain.PersonalRecords
 import com.bharath.homeforge.domain.PlannedExercise
 import com.bharath.homeforge.domain.RoutineGenerator
+import com.bharath.homeforge.domain.ScheduleResult
 import com.bharath.homeforge.domain.SetResult
 import com.bharath.homeforge.domain.Split
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.math.ceil
@@ -76,6 +83,20 @@ class LogViewModel(app: Application) : AndroidViewModel(app) {
 
     val equipment: StateFlow<Equipment> = equipmentRepo.equipment
 
+    val userPrefs: StateFlow<UserPrefs> = userPrefsRepo.userPrefs
+
+    val schedule: StateFlow<ScheduleResult> = dao
+        .observeSchedule(userPrefsRepo.userPrefs)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ScheduleResult.Empty)
+
+    val levelStatus: StateFlow<LevelStatus> = dao
+        .observeLevelStatus(userPrefsRepo.userPrefs)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LevelStatus.Initial)
+
+    private var level = Level.INTERMEDIATE
+
+    fun setNoEquipment(value: Boolean) = userPrefsRepo.update { it.copy(noEquipment = value) }
+
     val warnings: StateFlow<List<String>> = dao.observeReadiness()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
@@ -94,13 +115,17 @@ class LogViewModel(app: Application) : AndroidViewModel(app) {
     fun start(split: Split, dayIndex: Int) {
         viewModelScope.launch {
             message = null
+            val prefs = userPrefsRepo.userPrefs.value
+            level = dao.observeLevelStatus(userPrefsRepo.userPrefs).first().level
             val routine = RoutineGenerator.generate(
                 split,
                 dayIndex,
                 equipmentRepo.equipment.value,
                 SwapRepository.offsetsFor(swapRepo.swaps.value, split, dayIndex),
                 rotationRepo.rotation.value.block(),
-                userPrefsRepo.userPrefs.value.goal,
+                prefs.goal,
+                level,
+                prefs.noEquipment,
             )
             val draft = WorkoutDraft(split, dayIndex, System.currentTimeMillis())
             routine.items.forEach {
@@ -118,7 +143,7 @@ class LogViewModel(app: Application) : AndroidViewModel(app) {
             } else {
                 GoalProfile.reps(userPrefsRepo.userPrefs.value.goal, exercise.movement, 8..12, false)
             }
-            draft.exercises += buildExercise(draft, exercise, 3, reps)
+            draft.exercises += buildExercise(draft, exercise, level.setsFor(3), reps)
         }
     }
 
@@ -232,7 +257,14 @@ class LogViewModel(app: Application) : AndroidViewModel(app) {
         val history = dao.recentSetsFor(exercise.name)
             .groupBy { it.sessionId }.values
             .map { session -> session.map { SetResult(it.weightKg, it.reps) } }
-        val suggestion = Adaptation.suggest(equipmentRepo.equipment.value, exercise, history, sets, reps)
+        val suggestion = Adaptation.suggest(
+            equipmentRepo.equipment.value,
+            exercise,
+            history,
+            sets,
+            reps,
+            level.startFactor,
+        )
         val weight = suggestion.weightKg
         return ExerciseDraft(
             id = draft.nextId++,
