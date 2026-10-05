@@ -46,6 +46,7 @@ import com.bharath.homeforge.data.buildHistory
 import com.bharath.homeforge.domain.Effort
 import com.bharath.homeforge.domain.MeasurementType
 import com.bharath.homeforge.domain.PersonalRecords
+import com.bharath.homeforge.domain.Split
 import com.bharath.homeforge.domain.Streaks
 import com.bharath.homeforge.ui.ProgressViewModel
 import com.bharath.homeforge.ui.formatKg
@@ -69,7 +70,7 @@ fun ProgressScreen(onOpenHistory: () -> Unit, vm: ProgressViewModel = viewModel(
     var mode by rememberSaveable { mutableStateOf(MODE_LIFTS) }
 
     val workoutDays = remember(sessions) {
-        sessions.map { Instant.ofEpochMilli(it.startedAt).atZone(ZoneId.systemDefault()).toLocalDate().toEpochDay() }
+        sessions.filter { it.splitName != Split.CORE_DAY.name }.map { Instant.ofEpochMilli(it.startedAt).atZone(ZoneId.systemDefault()).toLocalDate().toEpochDay() }
     }
     val today = LocalDate.now().toEpochDay()
     val streak = Streaks.weeklyStreak(workoutDays, today)

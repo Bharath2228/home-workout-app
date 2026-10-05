@@ -70,6 +70,12 @@ object ExerciseLibrary {
         Exercise("Plank", Movement.CORE, null, timed = true),
         Exercise("Russian twist", Movement.CORE, Rig.SINGLE_DUMBBELL, 5.0),
         Exercise("Dead bug", Movement.CORE, null),
+        Exercise("Side plank", Movement.CORE, null, timed = true),
+        Exercise("Leg raise", Movement.CORE, null),
+        Exercise("Bicycle crunch", Movement.CORE, null),
+        Exercise("Weighted crunch", Movement.CORE, Rig.SINGLE_DUMBBELL, 5.0),
+        Exercise("Barbell rollout", Movement.CORE, null),
+        Exercise("Mountain climber", Movement.CORE, null, timed = true),
 
         Exercise("Dumbbell calf raise", Movement.CALF, Rig.DUMBBELL_PAIR, 8.0),
         Exercise("Bodyweight calf raise", Movement.CALF, null),

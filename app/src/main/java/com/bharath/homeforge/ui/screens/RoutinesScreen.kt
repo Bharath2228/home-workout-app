@@ -94,6 +94,14 @@ fun RoutinesScreen(vm: RoutinesViewModel = viewModel()) {
             }
         }
 
+        if (split == Split.CORE_DAY) {
+            Text(
+                "An optional extra session for a rest day. It doesn't count toward your rest-day warnings or streak.",
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
+
         PrimaryScrollableTabRow(selectedTabIndex = dayIndex, edgePadding = 0.dp) {
             split.dayNames.forEachIndexed { index, name ->
                 Tab(

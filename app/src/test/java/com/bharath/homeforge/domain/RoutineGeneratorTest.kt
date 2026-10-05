@@ -45,6 +45,23 @@ class RoutineGeneratorTest {
     }
 
     @Test
+    fun everyTrainingDayEndsWithCoreWork() {
+        Split.entries.forEach { split ->
+            split.dayNames.indices.forEach { day ->
+                val items = RoutineGenerator.generate(split, day, equipment).items
+                assertTrue("$split day $day", items.any { it.exercise.movement == Movement.CORE })
+            }
+        }
+    }
+
+    @Test
+    fun coreDayHasSeveralDifferentCoreExercises() {
+        val items = RoutineGenerator.generate(Split.CORE_DAY, 0, equipment).items
+        assertTrue(items.size >= 5)
+        assertTrue(items.all { it.exercise.movement == Movement.CORE })
+    }
+
+    @Test
     fun swapOffsetChangesExerciseAndWraps() {
         val base = RoutineGenerator.generate(Split.FULL_BODY, 0, equipment)
         val swapped = RoutineGenerator.generate(Split.FULL_BODY, 0, equipment, mapOf(0 to 1))

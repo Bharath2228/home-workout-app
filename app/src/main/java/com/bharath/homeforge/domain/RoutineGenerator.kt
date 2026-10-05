@@ -4,6 +4,9 @@ enum class Split(val label: String, val dayNames: List<String>) {
     FULL_BODY("Full body", listOf("Day A", "Day B", "Day C")),
     PUSH_PULL_LEGS("Push / Pull / Legs", listOf("Push", "Pull", "Legs")),
     SIX_DAY_PPL("6-day PPL", listOf("Push A", "Pull A", "Legs A", "Push B", "Pull B", "Legs B")),
+
+    /** An optional extra session for a rest day; every other split already ends with core work. */
+    CORE_DAY("Core day", listOf("Core")),
 }
 
 data class Slot(
@@ -55,6 +58,7 @@ object RoutineGenerator {
                 Slot(Movement.VERTICAL_PUSH, 2, 10..12, pick = 1),
                 Slot(Movement.BICEP, 2, 10..12, pick = 1),
                 Slot(Movement.CALF, 3, 12..15),
+                Slot(Movement.CORE, 3, 12..15, pick = 2),
             )
         }
         Split.PUSH_PULL_LEGS -> when (dayIndex) {
@@ -65,6 +69,7 @@ object RoutineGenerator {
                 Slot(Movement.SHOULDER_ISOLATION, 3, 12..15),
                 Slot(Movement.TRICEP, 3, 10..12),
                 Slot(Movement.TRICEP, 2, 10..12, pick = 1),
+                Slot(Movement.CORE, 3, 12..15, pick = 3),
             )
             1 -> listOf(
                 Slot(Movement.HORIZONTAL_PULL, 4, 6..8),
@@ -73,6 +78,7 @@ object RoutineGenerator {
                 Slot(Movement.SHOULDER_ISOLATION, 3, 12..15, pick = 1),
                 Slot(Movement.BICEP, 3, 8..10),
                 Slot(Movement.BICEP, 2, 10..12, pick = 1),
+                Slot(Movement.CORE, 3, 12..15, pick = 4),
             )
             else -> listOf(
                 Slot(Movement.SQUAT, 4, 6..8),
@@ -85,6 +91,7 @@ object RoutineGenerator {
         }
         Split.SIX_DAY_PPL ->
             if (dayIndex < 3) slots(Split.PUSH_PULL_LEGS, dayIndex) else sixDaySecondRound(dayIndex)
+        Split.CORE_DAY -> List(6) { Slot(Movement.CORE, 3, 12..15, pick = it) }
     }
 
     /** Days 4-6 repeat push/pull/legs with different exercise variations. */
@@ -96,6 +103,7 @@ object RoutineGenerator {
             Slot(Movement.SHOULDER_ISOLATION, 3, 12..15, pick = 1),
             Slot(Movement.TRICEP, 3, 10..12, pick = 2),
             Slot(Movement.TRICEP, 2, 10..12),
+            Slot(Movement.CORE, 3, 12..15, pick = 5),
         )
         4 -> listOf(
             Slot(Movement.HORIZONTAL_PULL, 4, 6..8, pick = 2),
@@ -104,6 +112,7 @@ object RoutineGenerator {
             Slot(Movement.SHOULDER_ISOLATION, 3, 12..15),
             Slot(Movement.BICEP, 3, 8..10, pick = 1),
             Slot(Movement.BICEP, 2, 10..12),
+            Slot(Movement.CORE, 3, 12..15, pick = 6),
         )
         else -> listOf(
             Slot(Movement.SQUAT, 4, 6..8, pick = 2),
