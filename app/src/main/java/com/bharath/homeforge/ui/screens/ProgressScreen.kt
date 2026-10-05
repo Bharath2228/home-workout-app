@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,10 +13,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,25 +36,44 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bharath.homeforge.data.Measurement
 import com.bharath.homeforge.data.SessionPoint
 import com.bharath.homeforge.data.buildHistory
+import com.bharath.homeforge.domain.Effort
+import com.bharath.homeforge.domain.MeasurementType
+import com.bharath.homeforge.domain.PersonalRecords
+import com.bharath.homeforge.domain.Streaks
 import com.bharath.homeforge.ui.ProgressViewModel
 import com.bharath.homeforge.ui.formatKg
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Date
 import java.util.Locale
 
+private const val MODE_LIFTS = "lifts"
+private const val MODE_BODY = "body"
+
 @Composable
-fun ProgressScreen(vm: ProgressViewModel = viewModel()) {
+fun ProgressScreen(onOpenHistory: () -> Unit, vm: ProgressViewModel = viewModel()) {
     val sets by vm.sets.collectAsStateWithLifecycle()
+    val sessions by vm.sessions.collectAsStateWithLifecycle()
+    val measurements by vm.measurements.collectAsStateWithLifecycle()
     val sessionCount by vm.sessionCount.collectAsStateWithLifecycle()
-    val history = remember(sets) { buildHistory(sets) }
-    val names = remember(history) { history.keys.sorted() }
-    var selected by rememberSaveable { mutableStateOf<String?>(null) }
-    val current = selected?.takeIf { it in history } ?: names.firstOrNull()
+    val warnings by vm.warnings.collectAsStateWithLifecycle()
+    var mode by rememberSaveable { mutableStateOf(MODE_LIFTS) }
+
+    val workoutDays = remember(sessions) {
+        sessions.map { Instant.ofEpochMilli(it.startedAt).atZone(ZoneId.systemDefault()).toLocalDate().toEpochDay() }
+    }
+    val today = LocalDate.now().toEpochDay()
+    val streak = Streaks.weeklyStreak(workoutDays, today)
+    val thisWeek = Streaks.workoutsThisWeek(workoutDays, today)
 
     Column(Modifier.fillMaxSize().padding(top = 16.dp)) {
         Text(
@@ -53,49 +81,177 @@ fun ProgressScreen(vm: ProgressViewModel = viewModel()) {
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(horizontal = 16.dp),
         )
-        Text(
-            "$sessionCount workouts logged",
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-        )
-
-        if (current == null) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Log a workout to see your progress here.")
-            }
-            return@Column
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "$sessionCount workouts logged",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(onClick = onOpenHistory) { Text("Manage workouts") }
         }
-
-        LazyRow(
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
+        Text(
+            "Weekly streak: ${weeksText(streak)}. This week: $thisWeek ${if (thisWeek == 1) "workout" else "workouts"}.",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
+        WarningsCard(warnings, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+        Row(
+            Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(names) { name ->
-                FilterChip(selected = name == current, onClick = { selected = name }, label = { Text(name) })
+            FilterChip(selected = mode == MODE_LIFTS, onClick = { mode = MODE_LIFTS }, label = { Text("Lifts") })
+            FilterChip(selected = mode == MODE_BODY, onClick = { mode = MODE_BODY }, label = { Text("Body") })
+        }
+
+        if (mode == MODE_LIFTS) {
+            LiftsPanel(sets)
+        } else {
+            BodyPanel(
+                measurements = measurements,
+                onAdd = vm::addMeasurement,
+                onDelete = vm::deleteMeasurement,
+            )
+        }
+    }
+}
+
+private fun weeksText(weeks: Int): String = if (weeks == 1) "1 week" else "$weeks weeks"
+
+@Composable
+private fun LiftsPanel(sets: List<com.bharath.homeforge.data.LoggedSet>) {
+    val history = remember(sets) { buildHistory(sets) }
+    val names = remember(history) { history.keys.sorted() }
+    var selected by rememberSaveable { mutableStateOf<String?>(null) }
+    val current = selected?.takeIf { it in history } ?: names.firstOrNull()
+
+    if (current == null) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Log a workout to see your progress here.")
+        }
+        return
+    }
+
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(names) { name ->
+            FilterChip(selected = name == current, onClick = { selected = name }, label = { Text(name) })
+        }
+    }
+
+    val points = history.getValue(current)
+    val weighted = points.any { it.topWeightKg != null }
+    val values = points.map { (if (weighted) it.topWeightKg ?: 0.0 else it.totalReps.toDouble()).toFloat() }
+    val best = remember(sets, current) {
+        PersonalRecords.best(sets.filter { it.exerciseName == current }.map { Effort(it.exerciseName, it.weightKg, it.reps) })
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        item {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        if (weighted) "Top weight per workout (kg)" else "Total reps per workout",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    if (best != null) {
+                        Text(
+                            "Best set: " + if (best.weightKg != null) "${formatKg(best.weightKg)} kg x ${best.reps}" else "${best.reps} reps",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                    LineChart(values)
+                }
+            }
+        }
+        items(points.reversed()) { point -> SessionRow(point, weighted) }
+    }
+}
+
+@Composable
+private fun BodyPanel(
+    measurements: List<Measurement>,
+    onAdd: (MeasurementType, Double) -> Unit,
+    onDelete: (Measurement) -> Unit,
+) {
+    var typeName by rememberSaveable { mutableStateOf(MeasurementType.BODY_WEIGHT.name) }
+    val type = MeasurementType.valueOf(typeName)
+    var input by remember(type) { mutableStateOf("") }
+    var error by remember(type) { mutableStateOf<String?>(null) }
+    val entries = remember(measurements, type) { measurements.filter { it.type == type.name } }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        item {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(MeasurementType.entries) { option ->
+                    FilterChip(selected = option == type, onClick = { typeName = option.name }, label = { Text(option.label) })
+                }
+            }
+        }
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = input,
+                    onValueChange = { input = it },
+                    label = { Text("${type.label} (${type.unit})") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.weight(1f),
+                )
+                Button(onClick = {
+                    val value = input.replace(',', '.').toDoubleOrNull()
+                    if (value == null || value < type.min || value > type.max) {
+                        error = "Enter ${formatKg(type.min)} to ${formatKg(type.max)} ${type.unit}."
+                    } else {
+                        onAdd(type, value)
+                        input = ""
+                        error = null
+                    }
+                }) { Text("Save") }
+            }
+            if (error != null) {
+                Text(error.orEmpty(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
         }
 
-        val points = history.getValue(current)
-        val weighted = points.any { it.topWeightKg != null }
-        val values = points.map { (if (weighted) it.topWeightKg ?: 0.0 else it.totalReps.toDouble()).toFloat() }
-
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+        if (entries.isEmpty()) {
+            item { Text("No ${type.label.lowercase()} entries yet.") }
+        } else {
             item {
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("${type.label} over time (${type.unit})", style = MaterialTheme.typography.titleMedium)
+                        val change = entries.last().value - entries.first().value
                         Text(
-                            if (weighted) "Top weight per workout (kg)" else "Total reps per workout",
-                            style = MaterialTheme.typography.titleMedium,
+                            "Latest ${formatKg(entries.last().value)} ${type.unit}" +
+                                if (entries.size > 1) ", ${if (change >= 0) "+" else ""}${"%.1f".format(change)} since the first entry" else "",
+                            style = MaterialTheme.typography.bodyMedium,
                         )
-                        LineChart(values)
+                        LineChart(entries.map { it.value.toFloat() })
                     }
                 }
             }
-            items(points.reversed()) { point -> SessionRow(point, weighted) }
+            items(entries.reversed(), key = { it.id }) { entry ->
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(formatDate(entry.time), modifier = Modifier.weight(1f))
+                    Text("${formatKg(entry.value)} ${type.unit}", style = MaterialTheme.typography.bodyMedium)
+                    IconButton(onClick = { onDelete(entry) }) {
+                        Icon(Icons.Filled.Delete, contentDescription = "Delete entry")
+                    }
+                }
+            }
         }
     }
 }
@@ -132,9 +288,7 @@ private fun LineChart(values: List<Float>) {
 
 @Composable
 private fun SessionRow(point: SessionPoint, weighted: Boolean) {
-    val date = remember(point.time) {
-        SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(Date(point.time))
-    }
+    val date = remember(point.time) { formatDate(point.time) }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(date)
         Text(
@@ -147,3 +301,6 @@ private fun SessionRow(point: SessionPoint, weighted: Boolean) {
         )
     }
 }
+
+private fun formatDate(millis: Long): String =
+    SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(Date(millis))

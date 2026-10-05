@@ -14,6 +14,14 @@ data class WorkoutSession(
     val dayIndex: Int,
 )
 
+@Entity(tableName = "measurements")
+data class Measurement(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val time: Long,
+    val type: String,
+    val value: Double,
+)
+
 @Entity(
     tableName = "logged_sets",
     foreignKeys = [

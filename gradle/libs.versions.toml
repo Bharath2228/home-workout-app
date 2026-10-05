@@ -9,6 +9,7 @@ lifecycle = "2.8.7"
 room = "2.6.1"
 coreKtx = "1.15.0"
 junit = "4.13.2"
+orgJson = "20231013"
 healthConnect = "1.1.0-alpha07"
 
 [libraries]
@@ -28,6 +29,7 @@ androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = 
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 androidx-health-connect = { group = "androidx.health.connect", name = "connect-client", version.ref = "healthConnect" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+org-json = { group = "org.json", name = "json", version.ref = "orgJson" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -47,13 +47,29 @@ class HealthConnectManager(private val context: Context) {
     /** Writes each workout, plus an estimated calorie record when [bodyWeightKg] is known. */
     suspend fun writeSessions(sessions: List<SessionWithSets>, bodyWeightKg: Double?) {
         if (sessions.isEmpty()) return
+        // An ever-increasing version lets a re-sync overwrite the earlier record after an edit.
+        val version = System.currentTimeMillis()
         val records = ArrayList<Record>()
         sessions.forEach { item ->
             val window = windowFor(item.session)
-            records += sessionRecord(item, window)
-            if (bodyWeightKg != null) records += caloriesRecord(item, window, bodyWeightKg)
+            records += sessionRecord(item, window, version)
+            if (bodyWeightKg != null) records += caloriesRecord(item, window, bodyWeightKg, version)
         }
         client().insertRecords(records)
+    }
+
+    suspend fun deleteSession(sessionId: Long) {
+        val client = client()
+        client.deleteRecords(
+            ExerciseSessionRecord::class,
+            recordIdsList = emptyList(),
+            clientRecordIdsList = listOf("homeforge-session-$sessionId"),
+        )
+        client.deleteRecords(
+            ActiveCaloriesBurnedRecord::class,
+            recordIdsList = emptyList(),
+            clientRecordIdsList = listOf("homeforge-calories-$sessionId"),
+        )
     }
 
     suspend fun writeWeight(kg: Double) {
@@ -95,14 +111,15 @@ class HealthConnectManager(private val context: Context) {
         return Window(start, end, zone.rules.getOffset(start), zone.rules.getOffset(end))
     }
 
-    private fun sessionRecord(item: SessionWithSets, window: Window): ExerciseSessionRecord =
-        runCatching { buildSession(item, window, segments(item, window)) }
-            .getOrElse { buildSession(item, window, emptyList()) }
+    private fun sessionRecord(item: SessionWithSets, window: Window, version: Long): ExerciseSessionRecord =
+        runCatching { buildSession(item, window, segments(item, window), version) }
+            .getOrElse { buildSession(item, window, emptyList(), version) }
 
     private fun buildSession(
         item: SessionWithSets,
         window: Window,
         segments: List<ExerciseSegment>,
+        version: Long,
     ): ExerciseSessionRecord {
         val split = runCatching { Split.valueOf(item.session.splitName) }.getOrNull()
         val dayName = split?.dayNames?.getOrNull(item.session.dayIndex)
@@ -119,7 +136,7 @@ class HealthConnectManager(private val context: Context) {
             segments = segments,
             metadata = Metadata(
                 clientRecordId = "homeforge-session-${item.session.id}",
-                clientRecordVersion = RECORD_VERSION,
+                clientRecordVersion = version,
             ),
         )
     }
@@ -128,6 +145,7 @@ class HealthConnectManager(private val context: Context) {
         item: SessionWithSets,
         window: Window,
         bodyWeightKg: Double,
+        version: Long,
     ): ActiveCaloriesBurnedRecord {
         val minutes = Duration.between(window.start, window.end).toMillis() / 60_000.0
         return ActiveCaloriesBurnedRecord(
@@ -138,7 +156,7 @@ class HealthConnectManager(private val context: Context) {
             energy = Energy.kilocalories(CalorieEstimator.activeKcal(bodyWeightKg, minutes)),
             metadata = Metadata(
                 clientRecordId = "homeforge-calories-${item.session.id}",
-                clientRecordVersion = RECORD_VERSION,
+                clientRecordVersion = version,
             ),
         )
     }
@@ -195,6 +213,5 @@ class HealthConnectManager(private val context: Context) {
 
     companion object {
         const val PROVIDER_PACKAGE = "com.google.android.apps.healthdata"
-        private const val RECORD_VERSION = 2L
     }
 }

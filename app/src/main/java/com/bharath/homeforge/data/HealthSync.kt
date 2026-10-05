@@ -1,6 +1,7 @@
 package com.bharath.homeforge.data
 
 import android.content.Context
+import com.bharath.homeforge.domain.MeasurementType
 
 class HealthSync(context: Context, private val dao: WorkoutDao) {
 
@@ -17,6 +18,7 @@ class HealthSync(context: Context, private val dao: WorkoutDao) {
 
     /** Saves the weight locally, and also writes it to Health Connect when access is granted. Returns true if written there. */
     suspend fun saveBodyWeight(kg: Double): Boolean {
+        dao.insertMeasurement(Measurement(time = System.currentTimeMillis(), type = MeasurementType.BODY_WEIGHT.name, value = kg))
         bodyWeightKg = kg
         if (!manager.hasAllPermissions()) return false
         manager.writeWeight(kg)
@@ -29,6 +31,11 @@ class HealthSync(context: Context, private val dao: WorkoutDao) {
         val session = dao.sessionById(sessionId) ?: return false
         manager.writeSessions(listOf(SessionWithSets(session, dao.setsForSession(sessionId))), bodyWeightKg)
         return true
+    }
+
+    /** Removes a deleted workout from Health Connect, if access is granted. */
+    suspend fun deleteSession(sessionId: Long) {
+        if (manager.hasAllPermissions()) manager.deleteSession(sessionId)
     }
 
     /** Re-sends every saved workout. Safe to repeat: records are keyed by a client id, so no duplicates. */

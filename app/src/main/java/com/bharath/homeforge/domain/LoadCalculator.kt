@@ -42,6 +42,10 @@ object LoadCalculator {
     fun nextUp(equipment: Equipment, rig: Rig, currentKg: Double): Double? =
         achievableWeights(equipment, rig).firstOrNull { it > currentKg + 1e-9 }
 
+    /** Largest achievable weight strictly below [currentKg], or null if already at the minimum. */
+    fun nextDown(equipment: Equipment, rig: Rig, currentKg: Double): Double? =
+        achievableWeights(equipment, rig).lastOrNull { it < currentKg - 1e-9 }
+
     private fun subsetSums(groups: List<Pair<Int, Int>>): Set<Int> {
         var sums = setOf(0)
         for ((grams, count) in groups) {
