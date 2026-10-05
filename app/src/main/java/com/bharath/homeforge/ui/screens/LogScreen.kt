@@ -35,8 +35,10 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -55,6 +57,8 @@ import com.bharath.homeforge.domain.PlateLoader
 import com.bharath.homeforge.domain.ScheduleResult
 import com.bharath.homeforge.domain.Split
 import com.bharath.homeforge.domain.WarmUp
+import kotlinx.coroutines.delay
+import com.bharath.homeforge.ui.formatDuration
 import com.bharath.homeforge.ui.formatKg
 import com.bharath.homeforge.ui.ExerciseDraft
 import com.bharath.homeforge.ui.LogViewModel
@@ -176,17 +180,26 @@ private fun WorkoutPane(
 ) {
     var picking by remember { mutableStateOf(false) }
     val warmUpIndex = workout.exercises.indexOfFirst { WarmUp.eligible(it.planned.exercise) }
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(workout.startedAt) {
+        while (true) {
+            now = System.currentTimeMillis()
+            delay(1000)
+        }
+    }
 
     Column(Modifier.fillMaxSize()) {
         Row(
             Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                workout.split.dayNames[workout.dayIndex],
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.weight(1f),
-            )
+            Column(Modifier.weight(1f)) {
+                Text(workout.split.dayNames[workout.dayIndex], style = MaterialTheme.typography.headlineMedium)
+                Text(
+                    "Time ${formatDuration((now - workout.startedAt) / 1000)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
             TextButton(onClick = onCancel) { Text("Cancel") }
             Button(onClick = onFinish) { Text("Finish") }
         }

@@ -236,7 +236,7 @@ class LogViewModel(app: Application) : AndroidViewModel(app) {
             workout = null
 
             val recordText = if (records.isEmpty()) "" else " New PR: ${records.joinToString { effortText(it) }}."
-            val saved = "Workout saved (${sets.size} sets).$recordText"
+            val saved = "Workout saved (${sets.size} sets, ${durationText(now - draft.startedAt)}).$recordText"
             message = if (health.enabled) {
                 runCatching { health.syncSessionIfEnabled(sessionId) }.fold(
                     onSuccess = { if (it) "$saved Synced to Health Connect." else "$saved Health Connect permission missing, open Settings." },

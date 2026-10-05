@@ -39,6 +39,7 @@ import com.bharath.homeforge.data.LoggedSet
 import com.bharath.homeforge.data.WorkoutSession
 import com.bharath.homeforge.domain.Split
 import com.bharath.homeforge.ui.HistoryViewModel
+import com.bharath.homeforge.ui.durationText
 import com.bharath.homeforge.ui.formatKg
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -122,7 +123,10 @@ private fun SessionCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(date, style = MaterialTheme.typography.titleMedium)
-                    Text("$title, ${sets.size} sets", style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        "$title, ${sets.size} sets, ${durationText(session.endedAt - session.startedAt)}",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
                 }
                 TextButton(onClick = onToggle) { Text(if (expanded) "Hide" else "Edit") }
                 IconButton(onClick = onDelete) {
