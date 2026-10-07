@@ -29,6 +29,7 @@ import com.bharath.homeforge.domain.Adaptation
 import com.bharath.homeforge.domain.Effort
 import com.bharath.homeforge.domain.Equipment
 import com.bharath.homeforge.domain.Exercise
+import com.bharath.homeforge.domain.GeneralWarmUp
 import com.bharath.homeforge.domain.GoalProfile
 import com.bharath.homeforge.domain.Level
 import com.bharath.homeforge.domain.LevelStatus
@@ -69,7 +70,11 @@ class WorkoutDraft(
     val startedAt: Long,
 ) {
     val exercises = mutableStateListOf<ExerciseDraft>()
+    val warmUpDone = mutableStateListOf<Boolean>().apply { addAll(List(GeneralWarmUp.moves.size) { false }) }
     var nextId = 0
+
+    var pausedAt by mutableStateOf<Long?>(null)
+    var pausedMs by mutableStateOf(0L)
 }
 
 class LogViewModel(app: Application) : AndroidViewModel(app) {
@@ -111,6 +116,28 @@ class LogViewModel(app: Application) : AndroidViewModel(app) {
 
     private var restEndsAt = 0L
     private var restJob: Job? = null
+    private var pausedRestRemaining: Int? = null
+
+    fun pause() {
+        val draft = workout ?: return
+        if (draft.pausedAt != null) return
+        draft.pausedAt = System.currentTimeMillis()
+        if (restRemaining > 0) {
+            pausedRestRemaining = restRemaining
+            restJob?.cancel()
+        }
+    }
+
+    fun resume() {
+        val draft = workout ?: return
+        val pausedAt = draft.pausedAt ?: return
+        draft.pausedMs += System.currentTimeMillis() - pausedAt
+        draft.pausedAt = null
+        pausedRestRemaining?.let {
+            startRest(it)
+            pausedRestRemaining = null
+        }
+    }
 
     fun start(split: Split, dayIndex: Int) {
         viewModelScope.launch {
@@ -133,6 +160,11 @@ class LogViewModel(app: Application) : AndroidViewModel(app) {
             }
             workout = draft
         }
+    }
+
+    fun toggleWarmUp(index: Int) {
+        val list = workout?.warmUpDone ?: return
+        if (index in list.indices) list[index] = !list[index]
     }
 
     fun addExercise(exercise: Exercise) {
@@ -195,12 +227,14 @@ class LogViewModel(app: Application) : AndroidViewModel(app) {
 
     fun cancel() {
         skipRest()
+        pausedRestRemaining = null
         workout = null
     }
 
     fun finish() {
         val draft = workout ?: return
         val now = System.currentTimeMillis()
+        val endedAt = now - draft.pausedMs - (draft.pausedAt?.let { now - it } ?: 0L)
         val sets = draft.exercises.flatMap { exercise ->
             exercise.sets.mapIndexedNotNull { index, set ->
                 if (!set.done) return@mapIndexedNotNull null
@@ -227,16 +261,17 @@ class LogViewModel(app: Application) : AndroidViewModel(app) {
             val sessionId = dao.saveWorkout(
                 WorkoutSession(
                     startedAt = draft.startedAt,
-                    endedAt = now,
+                    endedAt = endedAt,
                     splitName = draft.split.name,
                     dayIndex = draft.dayIndex,
+                    warmUpDone = draft.warmUpDone.all { it },
                 ),
                 sets,
             )
             workout = null
 
             val recordText = if (records.isEmpty()) "" else " New PR: ${records.joinToString { effortText(it) }}."
-            val saved = "Workout saved (${sets.size} sets, ${durationText(now - draft.startedAt)}).$recordText"
+            val saved = "Workout saved (${sets.size} sets, ${durationText(endedAt - draft.startedAt)}).$recordText"
             message = if (health.enabled) {
                 runCatching { health.syncSessionIfEnabled(sessionId) }.fold(
                     onSuccess = { if (it) "$saved Synced to Health Connect." else "$saved Health Connect permission missing, open Settings." },

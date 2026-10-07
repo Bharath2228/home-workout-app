@@ -124,7 +124,8 @@ private fun SessionCard(
                 Column(Modifier.weight(1f)) {
                     Text(date, style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "$title, ${sets.size} sets, ${durationText(session.endedAt - session.startedAt)}",
+                        "$title, ${sets.size} sets, ${durationText(session.endedAt - session.startedAt)}" +
+                            if (session.warmUpDone) ", warmed up" else "",
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }

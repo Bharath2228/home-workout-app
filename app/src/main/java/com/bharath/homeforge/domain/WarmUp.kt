@@ -2,6 +2,20 @@ package com.bharath.homeforge.domain
 
 data class WarmUpSet(val weightKg: Double, val reps: Int)
 
+data class WarmUpMove(val name: String, val detail: String)
+
+/** A short, fixed mobility warm-up done before any training day, regardless of the day's exercises. */
+object GeneralWarmUp {
+    val moves: List<WarmUpMove> = listOf(
+        WarmUpMove("March or jog in place", "60 seconds"),
+        WarmUpMove("Arm circles", "10 forward, 10 backward"),
+        WarmUpMove("Leg swings", "10 each leg, front to back"),
+        WarmUpMove("Bodyweight squat", "10 reps"),
+        WarmUpMove("Hip circles", "10 each direction"),
+        WarmUpMove("Cat-cow", "8 reps"),
+    )
+}
+
 object WarmUp {
 
     private val compound = setOf(

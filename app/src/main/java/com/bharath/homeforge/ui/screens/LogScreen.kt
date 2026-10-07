@@ -52,6 +52,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bharath.homeforge.domain.Equipment
 import com.bharath.homeforge.domain.Exercise
 import com.bharath.homeforge.domain.ExerciseLibrary
+import com.bharath.homeforge.domain.GeneralWarmUp
 import com.bharath.homeforge.domain.LevelStatus
 import com.bharath.homeforge.domain.PlateLoader
 import com.bharath.homeforge.domain.ScheduleResult
@@ -104,6 +105,9 @@ fun LogScreen(onOpenExercise: (String) -> Unit, vm: LogViewModel = viewModel()) 
             onSkipRest = vm::skipRest,
             onSetDone = { vm.startRest(it.planned.restSeconds) },
             onOpenExercise = onOpenExercise,
+            onToggleWarmUp = vm::toggleWarmUp,
+            onPause = vm::pause,
+            onResume = vm::resume,
         )
     }
 }
@@ -177,16 +181,21 @@ private fun WorkoutPane(
     onSkipRest: () -> Unit,
     onSetDone: (ExerciseDraft) -> Unit,
     onOpenExercise: (String) -> Unit,
+    onToggleWarmUp: (Int) -> Unit,
+    onPause: () -> Unit,
+    onResume: () -> Unit,
 ) {
     var picking by remember { mutableStateOf(false) }
     val warmUpIndex = workout.exercises.indexOfFirst { WarmUp.eligible(it.planned.exercise) }
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(workout.startedAt) {
-        while (true) {
+    val paused = workout.pausedAt != null
+    LaunchedEffect(workout.startedAt, paused) {
+        while (!paused) {
             now = System.currentTimeMillis()
             delay(1000)
         }
     }
+    val elapsedSeconds = ((workout.pausedAt ?: now) - workout.startedAt - workout.pausedMs) / 1000
 
     Column(Modifier.fillMaxSize()) {
         Row(
@@ -196,10 +205,11 @@ private fun WorkoutPane(
             Column(Modifier.weight(1f)) {
                 Text(workout.split.dayNames[workout.dayIndex], style = MaterialTheme.typography.headlineMedium)
                 Text(
-                    "Time ${formatDuration((now - workout.startedAt) / 1000)}",
+                    "Time ${formatDuration(elapsedSeconds)}" + if (paused) " (paused)" else "",
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
+            TextButton(onClick = if (paused) onResume else onPause) { Text(if (paused) "Resume" else "Pause") }
             TextButton(onClick = onCancel) { Text("Cancel") }
             Button(onClick = onFinish) { Text("Finish") }
         }
@@ -210,12 +220,14 @@ private fun WorkoutPane(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        "Rest ${formatClock(restRemaining)}",
+                        "Rest ${formatClock(restRemaining)}" + if (paused) " (paused)" else "",
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.weight(1f),
                     )
-                    TextButton(onClick = { onAddRest(15) }) { Text("+15 s") }
-                    TextButton(onClick = onSkipRest) { Text("Skip") }
+                    if (!paused) {
+                        TextButton(onClick = { onAddRest(15) }) { Text("+15 s") }
+                        TextButton(onClick = onSkipRest) { Text("Skip") }
+                    }
                 }
             }
         }
@@ -227,6 +239,9 @@ private fun WorkoutPane(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            item {
+                WarmUpCard(done = workout.warmUpDone, onToggle = onToggleWarmUp)
+            }
             itemsIndexed(workout.exercises, key = { _, item -> item.id }) { index, exercise ->
                 ExerciseLog(
                     exercise = exercise,
@@ -260,6 +275,24 @@ private fun WorkoutPane(
             },
             onDismiss = { picking = false },
         )
+    }
+}
+
+@Composable
+private fun WarmUpCard(done: List<Boolean>, onToggle: (Int) -> Unit) {
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("Warm-up", style = MaterialTheme.typography.titleMedium)
+            GeneralWarmUp.moves.forEachIndexed { index, move ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = done.getOrElse(index) { false }, onCheckedChange = { onToggle(index) })
+                    Column(Modifier.weight(1f)) {
+                        Text(move.name, style = MaterialTheme.typography.bodyMedium)
+                        Text(move.detail, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+        }
     }
 }
 

@@ -11,6 +11,7 @@ the phone, so it works offline.
   dumbbells (both loaded the same) and the two rods joined into one barbell (plates mirrored on both sides).
 - A plate guide shows which plates to load, using the fewest plates, for example "Per side: 5 + 1.5".
 - Warm-up sets for the first heavy lift of a workout, built from loads you can make.
+- A general mobility warm-up checklist shown before every training day, and logged with the workout.
 
 ### Plans, calendar and levels
 - Three plans, chosen by how many days a week you can train: Full body (2 to 3 days), Push / Pull / Legs

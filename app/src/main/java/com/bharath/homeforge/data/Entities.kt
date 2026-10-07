@@ -12,6 +12,7 @@ data class WorkoutSession(
     val endedAt: Long,
     val splitName: String,
     val dayIndex: Int,
+    val warmUpDone: Boolean = false,
 )
 
 @Entity(tableName = "measurements")

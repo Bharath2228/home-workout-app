@@ -34,7 +34,8 @@ object BackupCodec {
                         .put("startedAt", it.startedAt)
                         .put("endedAt", it.endedAt)
                         .put("splitName", it.splitName)
-                        .put("dayIndex", it.dayIndex),
+                        .put("dayIndex", it.dayIndex)
+                        .put("warmUpDone", it.warmUpDone),
                 )
             }
         })
@@ -72,6 +73,7 @@ object BackupCodec {
                     endedAt = it.getLong("endedAt"),
                     splitName = it.getString("splitName"),
                     dayIndex = it.getInt("dayIndex"),
+                    warmUpDone = it.optBoolean("warmUpDone", false),
                 )
             }
             val sessionIds = sessions.map { it.id }.toSet()
