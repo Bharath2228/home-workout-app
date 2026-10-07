@@ -5,10 +5,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
@@ -18,12 +20,20 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SentimentDissatisfied
+import androidx.compose.material.icons.filled.SentimentNeutral
+import androidx.compose.material.icons.filled.SentimentSatisfied
+import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -67,6 +77,9 @@ import com.bharath.homeforge.ui.LogViewModel
 import com.bharath.homeforge.ui.SetDraft
 import com.bharath.homeforge.ui.formatClock
 import com.bharath.homeforge.ui.WorkoutDraft
+import com.bharath.homeforge.ui.theme.Plate
+import com.bharath.homeforge.ui.theme.PlateAccent
+import com.bharath.homeforge.ui.theme.ReadoutTextStyle
 
 @Composable
 fun LogScreen(onOpenExercise: (String) -> Unit, vm: LogViewModel = viewModel()) {
@@ -132,7 +145,7 @@ private fun StartPane(
     val tab = chosenTab ?: nextDay
     val active = activeDay(program, tab)
 
-    Column(Modifier.fillMaxSize().padding(top = 16.dp)) {
+    Column(Modifier.fillMaxSize().padding(top = 20.dp)) {
         Text(
             "Log a workout",
             style = MaterialTheme.typography.headlineMedium,
@@ -157,6 +170,7 @@ private fun StartPane(
                 "Uses the exercises on the Routines tab, including your swaps. Change your plan there. " +
                     "Weights and sets adapt to how your last sessions went.",
                 style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Button(onClick = { onStart(active.split, active.dayIndex) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Start ${active.split.dayNames[active.dayIndex]}")
@@ -211,17 +225,50 @@ private fun WorkoutPane(
 
     Column(Modifier.fillMaxSize()) {
         Row(
-            Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 16.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(Modifier.weight(1f)) {
-                Text(workout.split.dayNames[workout.dayIndex], style = MaterialTheme.typography.headlineMedium)
+            Text(
+                workout.split.dayNames[workout.dayIndex],
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.weight(1f),
+            )
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                shape = MaterialTheme.shapes.small,
+            ) {
                 Text(
-                    "Time ${formatDuration(elapsedSeconds)}" + if (paused) " (paused)" else "",
-                    style = MaterialTheme.typography.bodyMedium,
+                    formatDuration(elapsedSeconds),
+                    style = ReadoutTextStyle,
+                    color = if (paused) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                 )
             }
-            TextButton(onClick = if (paused) onResume else onPause) { Text(if (paused) "Resume" else "Pause") }
+        }
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        Row(
+            Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            OutlinedButton(onClick = if (paused) onResume else onPause) {
+                Icon(
+                    if (paused) Icons.Filled.PlayArrow else Icons.Filled.Pause,
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 6.dp),
+                )
+                Text(if (paused) "Resume" else "Pause")
+            }
+            if (paused) {
+                Text(
+                    "Paused",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                )
+            } else {
+                Spacer(modifier = Modifier.weight(1f))
+            }
             TextButton(onClick = onCancel) { Text("Cancel") }
             Button(onClick = onFinish) { Text("Finish") }
         }
@@ -232,8 +279,15 @@ private fun WorkoutPane(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        "Rest ${formatClock(restRemaining)}" + if (paused) " (paused)" else "",
+                        "Rest" + if (paused) " (paused)" else "",
                         style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(end = 8.dp),
+                    )
+                    Text(
+                        formatClock(restRemaining),
+                        style = ReadoutTextStyle,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.weight(1f),
                     )
                     if (!paused) {
@@ -244,7 +298,11 @@ private fun WorkoutPane(
             }
         }
         if (message != null) {
-            Text(message, modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.error)
+            Text(
+                message,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                color = MaterialTheme.colorScheme.error,
+            )
         }
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -252,7 +310,12 @@ private fun WorkoutPane(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
-                WarmUpCard(moves = workout.warmUpMoves, done = workout.warmUpDone, onToggle = onToggleWarmUp)
+                WarmUpCard(
+                    moves = workout.warmUpMoves,
+                    done = workout.warmUpDone,
+                    onToggle = onToggleWarmUp,
+                    onInfo = onOpenExercise,
+                )
             }
             itemsIndexed(workout.exercises, key = { _, item -> item.id }) { index, exercise ->
                 ExerciseLog(
@@ -293,16 +356,26 @@ private fun WorkoutPane(
 }
 
 @Composable
-private fun WarmUpCard(moves: List<WarmUpMove>, done: List<Boolean>, onToggle: (Int) -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+private fun WarmUpCard(moves: List<WarmUpMove>, done: List<Boolean>, onToggle: (Int) -> Unit, onInfo: (String) -> Unit) {
+    Plate(accent = PlateAccent.SPARK, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Warm-up", style = MaterialTheme.typography.titleMedium)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Filled.Whatshot, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
+                Text("Warm-up", style = MaterialTheme.typography.titleMedium)
+            }
             moves.forEachIndexed { index, move ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = done.getOrElse(index) { false }, onCheckedChange = { onToggle(index) })
+                    Checkbox(
+                        checked = done.getOrElse(index) { false },
+                        onCheckedChange = { onToggle(index) },
+                        colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.secondary),
+                    )
                     Column(Modifier.weight(1f)) {
                         Text(move.name, style = MaterialTheme.typography.bodyMedium)
-                        Text(move.detail, style = MaterialTheme.typography.bodySmall)
+                        Text(move.detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    IconButton(onClick = { onInfo(move.name) }) {
+                        Icon(Icons.Filled.Info, contentDescription = "How to do ${move.name}")
                     }
                 }
             }
@@ -351,7 +424,7 @@ private fun ExerciseLog(
     val firstWeight = exercise.sets.firstOrNull()?.weight?.replace(',', '.')?.toDoubleOrNull()
     val plateText = if (rig != null && firstWeight != null) PlateLoader.describe(equipment, rig, firstWeight) else null
     val warmUps = if (showWarmUp && firstWeight != null) WarmUp.sets(equipment, planned.exercise, firstWeight) else emptyList()
-    Card(Modifier.fillMaxWidth()) {
+    Plate(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.Top) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -359,11 +432,16 @@ private fun ExerciseLog(
                     Text(
                         "Target: ${planned.sets} x ${planned.reps.first}-${planned.reps.last} $unit",
                         style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    if (exercise.lastText != null) Text(exercise.lastText, style = MaterialTheme.typography.bodySmall)
-                    if (exercise.note != null) Text("Why: ${exercise.note}", style = MaterialTheme.typography.bodySmall)
+                    if (exercise.lastText != null) {
+                        Text(exercise.lastText, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    if (exercise.note != null) {
+                        Text("Why: ${exercise.note}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                     if (plateText != null) {
-                        Text(plateText, style = MaterialTheme.typography.bodySmall)
+                        Text(plateText, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     } else if (rig != null && firstWeight != null) {
                         Text(
                             "That exact weight can't be built with your plates.",
@@ -375,6 +453,7 @@ private fun ExerciseLog(
                         Text(
                             "Warm-up: " + warmUps.joinToString(", ") { "${formatKg(it.weightKg)} kg x ${it.reps}" },
                             style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
@@ -396,6 +475,7 @@ private fun ExerciseLog(
                     selected = exercise.isSuperset,
                     onClick = onToggleSuperset,
                     label = { Text("Superset with next exercise: no rest in between") },
+                    leadingIcon = { Icon(Icons.Filled.Link, contentDescription = null, modifier = Modifier.size(18.dp)) },
                 )
             }
             exercise.sets.forEachIndexed { index, set ->
@@ -441,16 +521,28 @@ private fun SetRow(number: Int, set: SetDraft, showWeight: Boolean, unit: String
             )
         }
         if (set.done) {
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("How did it feel?", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = 4.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    "How did it feel?",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(end = 4.dp),
+                )
                 Difficulty.entries.forEach { option ->
                     FilterChip(
                         selected = set.difficulty == option,
                         onClick = { set.difficulty = if (set.difficulty == option) null else option },
                         label = { Text(option.label) },
+                        leadingIcon = { Icon(difficultyIcon(option), contentDescription = null, modifier = Modifier.size(18.dp)) },
                     )
                 }
             }
         }
     }
+}
+
+private fun difficultyIcon(difficulty: Difficulty) = when (difficulty) {
+    Difficulty.EASY -> Icons.Filled.SentimentSatisfied
+    Difficulty.OK -> Icons.Filled.SentimentNeutral
+    Difficulty.HARD -> Icons.Filled.SentimentDissatisfied
 }

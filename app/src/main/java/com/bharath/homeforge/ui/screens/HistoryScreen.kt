@@ -15,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +40,7 @@ import com.bharath.homeforge.domain.Split
 import com.bharath.homeforge.ui.HistoryViewModel
 import com.bharath.homeforge.ui.durationText
 import com.bharath.homeforge.ui.formatKg
+import com.bharath.homeforge.ui.theme.Plate
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -118,7 +118,7 @@ private fun SessionCard(
     val split = runCatching { Split.valueOf(session.splitName) }.getOrNull()
     val title = listOfNotNull(split?.label, split?.dayNames?.getOrNull(session.dayIndex)).joinToString(" - ")
 
-    Card(Modifier.fillMaxWidth()) {
+    Plate(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -127,6 +127,7 @@ private fun SessionCard(
                         "$title, ${sets.size} sets, ${durationText(session.endedAt - session.startedAt)}" +
                             if (session.warmUpDone) ", warmed up" else "",
                         style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 TextButton(onClick = onToggle) { Text(if (expanded) "Hide" else "Edit") }

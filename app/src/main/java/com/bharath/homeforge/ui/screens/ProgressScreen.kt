@@ -17,7 +17,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,6 +49,10 @@ import com.bharath.homeforge.domain.Split
 import com.bharath.homeforge.domain.Streaks
 import com.bharath.homeforge.ui.ProgressViewModel
 import com.bharath.homeforge.ui.formatKg
+import com.bharath.homeforge.ui.theme.Plate
+import com.bharath.homeforge.ui.theme.PlateAccent
+import com.bharath.homeforge.ui.theme.ReadoutTextStyle
+import com.bharath.homeforge.ui.theme.ReadoutTextStyleSmall
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
@@ -83,21 +86,19 @@ fun ProgressScreen(onOpenHistory: () -> Unit, vm: ProgressViewModel = viewModel(
             modifier = Modifier.padding(horizontal = 16.dp),
         )
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(
-                "$sessionCount workouts logged",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f),
-            )
+            StatGauge("Logged", sessionCount.toString(), Modifier.weight(1f))
+            StatGauge("Streak", weeksText(streak), Modifier.weight(1f))
+            StatGauge("This week", thisWeek.toString(), Modifier.weight(1f))
+        }
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.End,
+        ) {
             TextButton(onClick = onOpenHistory) { Text("Manage workouts") }
         }
-        Text(
-            "Weekly streak: ${weeksText(streak)}. This week: $thisWeek ${if (thisWeek == 1) "workout" else "workouts"}.",
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(horizontal = 16.dp),
-        )
         WarningsCard(warnings, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
         Row(
             Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -120,6 +121,16 @@ fun ProgressScreen(onOpenHistory: () -> Unit, vm: ProgressViewModel = viewModel(
 }
 
 private fun weeksText(weeks: Int): String = if (weeks == 1) "1 week" else "$weeks weeks"
+
+@Composable
+private fun StatGauge(label: String, value: String, modifier: Modifier = Modifier) {
+    Plate(modifier) {
+        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+            Text(value, style = ReadoutTextStyleSmall, color = MaterialTheme.colorScheme.primary)
+            Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
 
 @Composable
 private fun LiftsPanel(sets: List<com.bharath.homeforge.data.LoggedSet>) {
@@ -157,7 +168,7 @@ private fun LiftsPanel(sets: List<com.bharath.homeforge.data.LoggedSet>) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            Card(Modifier.fillMaxWidth()) {
+            Plate(Modifier.fillMaxWidth(), accent = PlateAccent.EMBER) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         if (weighted) "Top weight per workout (kg)" else "Total reps per workout",
@@ -165,9 +176,11 @@ private fun LiftsPanel(sets: List<com.bharath.homeforge.data.LoggedSet>) {
                     )
                     if (best != null) {
                         Text(
-                            "Best set: " + if (best.weightKg != null) "${formatKg(best.weightKg)} kg x ${best.reps}" else "${best.reps} reps",
-                            style = MaterialTheme.typography.bodyMedium,
+                            (if (best.weightKg != null) "${formatKg(best.weightKg)} kg x ${best.reps}" else "${best.reps} reps"),
+                            style = ReadoutTextStyleSmall,
+                            color = MaterialTheme.colorScheme.primary,
                         )
+                        Text("Best set", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     LineChart(values)
                 }
@@ -231,7 +244,7 @@ private fun BodyPanel(
             item { Text("No ${type.label.lowercase()} entries yet.") }
         } else {
             item {
-                Card(Modifier.fillMaxWidth()) {
+                Plate(Modifier.fillMaxWidth(), accent = PlateAccent.EMBER) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("${type.label} over time (${type.unit})", style = MaterialTheme.typography.titleMedium)
                         val change = entries.last().value - entries.first().value

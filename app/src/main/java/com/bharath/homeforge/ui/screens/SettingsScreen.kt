@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -62,6 +61,7 @@ import com.bharath.homeforge.domain.Rig
 import com.bharath.homeforge.domain.Rotation
 import com.bharath.homeforge.ui.SettingsViewModel
 import com.bharath.homeforge.ui.formatKg
+import com.bharath.homeforge.ui.theme.Plate
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -112,7 +112,7 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
         item { Text("Settings", style = MaterialTheme.typography.headlineMedium) }
 
         item {
-            Card(Modifier.fillMaxWidth()) {
+            Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Health Connect", style = MaterialTheme.typography.titleMedium)
                     when {
@@ -143,7 +143,7 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
         }
 
         item {
-            Card(Modifier.fillMaxWidth()) {
+            Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Body weight", style = MaterialTheme.typography.titleMedium)
                     Text(
@@ -166,7 +166,7 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
         }
 
         item {
-            Card(Modifier.fillMaxWidth()) {
+            Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("About the pictures", style = MaterialTheme.typography.titleMedium)
                     Text(
@@ -179,7 +179,7 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
         }
 
         item {
-            Card(Modifier.fillMaxWidth()) {
+            Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Backup", style = MaterialTheme.typography.titleMedium)
                     Text(
@@ -199,7 +199,7 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
         }
 
         item {
-            Card(Modifier.fillMaxWidth()) {
+            Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Level and equipment", style = MaterialTheme.typography.titleMedium)
                     Text(levelText(levelStatus), style = MaterialTheme.typography.bodyMedium)
@@ -234,7 +234,7 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
         }
 
         item {
-            Card(Modifier.fillMaxWidth()) {
+            Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Training goal", style = MaterialTheme.typography.titleMedium)
                     Row(
@@ -259,7 +259,7 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
         }
 
         item {
-            Card(Modifier.fillMaxWidth()) {
+            Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Reminders", style = MaterialTheme.typography.titleMedium)
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -304,7 +304,7 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
         }
 
         item {
-            Card(Modifier.fillMaxWidth()) {
+            Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Exercise rotation", style = MaterialTheme.typography.titleMedium)
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -328,7 +328,7 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
         }
 
         item {
-            Card(Modifier.fillMaxWidth()) {
+            Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Equipment", style = MaterialTheme.typography.titleMedium)
                     Text(
@@ -379,7 +379,7 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
 
         items(Rig.entries) { rig ->
             val weights = remember(equipment, rig) { LoadCalculator.achievableWeights(equipment, rig) }
-            Card(Modifier.fillMaxWidth()) {
+            Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(rig.label, style = MaterialTheme.typography.titleMedium)
                     Text(

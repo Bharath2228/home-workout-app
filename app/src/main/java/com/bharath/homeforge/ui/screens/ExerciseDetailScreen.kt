@@ -3,6 +3,7 @@ package com.bharath.homeforge.ui.screens
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,11 +13,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -54,61 +55,79 @@ fun ExerciseDetailScreen(name: String, onBack: () -> Unit) {
 
         Column(
             Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             if (exercise != null) {
                 Text(
                     "${exercise.movement.label}. You need: ${equipmentText(exercise)}.",
                     style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
             if (media != null) {
-                Surface(color = Color.White, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        Modifier.padding(8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Surface(
+                        color = Color.White,
+                        shape = MaterialTheme.shapes.medium,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
-                        media.drawableNames.forEach { resourceName ->
-                            val id = remember(resourceName) {
-                                context.resources.getIdentifier(resourceName, "drawable", context.packageName)
-                            }
-                            if (id != 0) {
-                                Image(
-                                    painter = painterResource(id),
-                                    contentDescription = "$name demonstration",
-                                    contentScale = ContentScale.Fit,
-                                    modifier = Modifier.weight(1f).height(220.dp),
-                                )
+                        Row(Modifier.padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            media.drawableNames.forEach { resourceName ->
+                                val id = remember(resourceName) {
+                                    context.resources.getIdentifier(resourceName, "drawable", context.packageName)
+                                }
+                                if (id != 0) {
+                                    Image(
+                                        painter = painterResource(id),
+                                        contentDescription = "$name demonstration",
+                                        contentScale = ContentScale.Fit,
+                                        modifier = Modifier.weight(1f).height(220.dp),
+                                    )
+                                }
                             }
                         }
                     }
+                    Text(
+                        "Picture by ${media.credit.author}, ${media.credit.license}, from wger.de.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
-                Text(
-                    "Picture by ${media.credit.author}, ${media.credit.license}, from wger.de.",
-                    style = MaterialTheme.typography.bodySmall,
-                )
             } else {
                 Text(
                     "No picture for this one yet. Use the video demo below.",
                     style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
             if (guide != null) {
                 Section("How to do it") {
                     guide.steps.forEachIndexed { index, step ->
-                        Text("${index + 1}. $step", style = MaterialTheme.typography.bodyMedium)
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Text(
+                                "${index + 1}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(top = 1.dp),
+                            )
+                            Text(step, style = MaterialTheme.typography.bodyMedium)
+                        }
                     }
                 }
-                Section("Form cues") { guide.cues.forEach { Text("- $it", style = MaterialTheme.typography.bodyMedium) } }
-                Section("Common mistakes") { guide.mistakes.forEach { Text("- $it", style = MaterialTheme.typography.bodyMedium) } }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Section("Form cues") { guide.cues.forEach { Bulleted(it) } }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Section("Common mistakes") { guide.mistakes.forEach { Bulleted(it) } }
             }
 
             if (exercise?.rig != null) {
                 Text(
                     "Safety: lock your plates on both ends before every set, and stop if you feel sharp pain.",
                     style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
@@ -121,9 +140,17 @@ fun ExerciseDetailScreen(name: String, onBack: () -> Unit) {
 
 @Composable
 private fun Section(title: String, content: @Composable () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(title, style = MaterialTheme.typography.titleMedium)
         content()
+    }
+}
+
+@Composable
+private fun Bulleted(text: String) {
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text("-", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+        Text(text, style = MaterialTheme.typography.bodyMedium)
     }
 }
 

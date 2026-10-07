@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +26,8 @@ import com.bharath.homeforge.domain.LevelStatus
 import com.bharath.homeforge.domain.PlanHelper
 import com.bharath.homeforge.domain.ScheduleResult
 import com.bharath.homeforge.domain.Split
+import com.bharath.homeforge.ui.theme.Plate
+import com.bharath.homeforge.ui.theme.PlateAccent
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -119,11 +119,11 @@ fun PlanHeader(
     onChangePlan: (() -> Unit)? = null,
     onOpenCalendar: (() -> Unit)? = null,
 ) {
-    Card(modifier.fillMaxWidth()) {
+    Plate(modifier.fillMaxWidth(), accent = PlateAccent.EMBER) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text("Your plan: ${program.label}", style = MaterialTheme.typography.titleMedium)
-            Text(headline, style = MaterialTheme.typography.bodyMedium)
-            Text(program.schedule, style = MaterialTheme.typography.bodySmall)
+            Text(headline, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(program.schedule, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (onChangePlan != null || onOpenCalendar != null) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (onOpenCalendar != null) OutlinedButton(onClick = onOpenCalendar) { Text("Calendar") }
@@ -178,16 +178,12 @@ fun ProgramPickerDialog(current: Split, onPick: (Split) -> Unit, onDismiss: () -
                 )
                 Split.programs.forEach { program ->
                     val selected = program == current
-                    Card(
-                        onClick = { onPick(program) },
+                    Plate(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (selected) {
-                                MaterialTheme.colorScheme.primaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.surfaceVariant
-                            },
-                        ),
+                        accent = if (selected) PlateAccent.EMBER else PlateAccent.NONE,
+                        containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                        onClick = { onPick(program) },
                     ) {
                         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Text(

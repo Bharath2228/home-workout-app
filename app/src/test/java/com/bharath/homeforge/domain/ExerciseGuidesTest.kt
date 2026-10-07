@@ -24,6 +24,13 @@ class ExerciseGuidesTest {
     }
 
     @Test
+    fun everyGeneralWarmUpMoveHasAGuide() {
+        val moves = GeneralWarmUp.movesFor(Movement.entries.toSet())
+        val missing = moves.filter { ExerciseGuides.forExercise(it.name) == null }.map { it.name }
+        assertTrue("Missing guides: $missing", missing.isEmpty())
+    }
+
+    @Test
     fun exerciseNamesAreUnique() {
         assertEquals(ExerciseLibrary.all.size, ExerciseLibrary.all.map { it.name }.toSet().size)
     }

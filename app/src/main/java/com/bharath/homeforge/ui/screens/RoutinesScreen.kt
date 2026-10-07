@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.SwapHoriz
-import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +36,7 @@ import com.bharath.homeforge.domain.Rotation
 import com.bharath.homeforge.domain.RoutineGenerator
 import com.bharath.homeforge.ui.RoutinesViewModel
 import com.bharath.homeforge.ui.formatClock
+import com.bharath.homeforge.ui.theme.Plate
 
 @Composable
 fun RoutinesScreen(onOpenExercise: (String) -> Unit, onOpenCalendar: () -> Unit, vm: RoutinesViewModel = viewModel()) {
@@ -131,7 +131,7 @@ fun RoutinesScreen(onOpenExercise: (String) -> Unit, onOpenCalendar: () -> Unit,
 
 @Composable
 private fun ExerciseCard(item: PlannedExercise, equipment: Equipment, onInfo: () -> Unit, onSwap: () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+    Plate(Modifier.fillMaxWidth()) {
         Row(
             Modifier.padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -142,11 +142,18 @@ private fun ExerciseCard(item: PlannedExercise, equipment: Equipment, onInfo: ()
                 Text(
                     "${item.sets} x ${item.reps.first}-${item.reps.last}$unit",
                     style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Text("${loadText(item)}, rest ${formatClock(item.restSeconds)}", style = MaterialTheme.typography.bodySmall)
+                Text(
+                    "${loadText(item)}, rest ${formatClock(item.restSeconds)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 val rig = item.exercise.rig
                 val plates = if (rig != null && item.weightKg != null) PlateLoader.describe(equipment, rig, item.weightKg) else null
-                if (plates != null) Text(plates, style = MaterialTheme.typography.bodySmall)
+                if (plates != null) {
+                    Text(plates, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
             IconButton(onClick = onInfo) {
                 Icon(Icons.Filled.Info, contentDescription = "How to do ${item.exercise.name}")

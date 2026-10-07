@@ -14,8 +14,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,6 +33,8 @@ import com.bharath.homeforge.domain.DayStatus
 import com.bharath.homeforge.domain.PlanHelper
 import com.bharath.homeforge.domain.ScheduleEntry
 import com.bharath.homeforge.ui.CalendarViewModel
+import com.bharath.homeforge.ui.theme.Plate
+import com.bharath.homeforge.ui.theme.PlateAccent
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -65,7 +65,7 @@ fun CalendarScreen(onBack: () -> Unit, vm: CalendarViewModel = viewModel()) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
-                Card(Modifier.fillMaxWidth()) {
+                Plate(Modifier.fillMaxWidth(), accent = PlateAccent.EMBER) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(program.label, style = MaterialTheme.typography.titleMedium)
                         Text(
@@ -96,7 +96,7 @@ fun CalendarScreen(onBack: () -> Unit, vm: CalendarViewModel = viewModel()) {
             }
 
             item {
-                Card(Modifier.fillMaxWidth()) {
+                Plate(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Training days", style = MaterialTheme.typography.titleMedium)
                         Row(
@@ -146,11 +146,11 @@ private fun EntryRow(entry: ScheduleEntry, program: com.bharath.homeforge.domain
         DayStatus.PLANNED -> "Planned" to MaterialTheme.colorScheme.onSurfaceVariant
     }
     val highlight = entry.epochDay == today
-    Card(
+    Plate(
         Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (highlight) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-        ),
+        accent = if (highlight) PlateAccent.EMBER else PlateAccent.NONE,
+        containerColor = if (highlight) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+        contentColor = if (highlight) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {

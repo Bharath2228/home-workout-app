@@ -747,5 +747,63 @@ object ExerciseGuides {
             cues = listOf("Full range, up and down.", "Slow lowering.", "Use your hand only for balance."),
             mistakes = listOf("Bouncing.", "Rolling your ankle outward.", "Rushing the reps."),
         ),
+
+        // General warm-up moves. These aren't in ExerciseLibrary, so they never appear in a routine
+        // on their own, but the warm-up checklist links to this same guide screen for each one.
+        "March or jog in place" to guide(
+            steps = listOf(
+                "Stand tall with your feet hip width apart.",
+                "Lift your knees and swing your arms like an easy jog, without traveling anywhere.",
+                "Keep a steady, comfortable pace for the full time.",
+            ),
+            cues = listOf("Land softly on the balls of your feet.", "Breathe normally.", "Pick up the pace only if you're still cold after a minute."),
+            mistakes = listOf("Starting so fast you're out of breath by the end.", "Stomping flat-footed.", "Holding your arms stiff at your sides."),
+        ),
+        "Leg swings" to guide(
+            steps = listOf(
+                "Hold a wall or chair for balance and stand on one leg.",
+                "Swing the other leg forward and back in a controlled arc, like a pendulum.",
+                "Finish all reps, then face the other way and switch legs.",
+            ),
+            cues = listOf("Let the swing grow a little taller each rep.", "Keep your standing leg soft, not locked.", "Keep your hips facing forward."),
+            mistakes = listOf("Swinging so hard you lose balance.", "Rounding your lower back to gain height.", "Rushing through without warming up."),
+        ),
+        "Hip circles" to guide(
+            steps = listOf(
+                "Stand with your feet a little wider than your hips, hands on your hips.",
+                "Draw a slow, large circle with your hips, like you're hooping.",
+                "Do all reps one way, then reverse direction.",
+            ),
+            cues = listOf("Keep your knees soft.", "Make the circle as big as feels comfortable.", "Breathe steadily through the motion."),
+            mistakes = listOf("Only moving your upper body.", "Rushing the circles.", "Locking your knees straight."),
+        ),
+        "Cat-cow" to guide(
+            steps = listOf(
+                "Get on your hands and knees, hands under your shoulders and knees under your hips.",
+                "Drop your belly and lift your chest and tailbone, looking slightly up (cow).",
+                "Then round your spine toward the ceiling, tucking your chin and tailbone (cat).",
+                "Flow between the two shapes with your breath for all reps.",
+            ),
+            cues = listOf("Inhale into the cow, exhale into the cat.", "Move slowly through your whole spine.", "Keep your arms steady under your shoulders."),
+            mistakes = listOf("Moving only your neck instead of your whole spine.", "Rushing the breathing.", "Letting your hips drift behind your knees."),
+        ),
+        "Shoulder rolls" to guide(
+            steps = listOf(
+                "Stand tall with your arms relaxed at your sides.",
+                "Roll both shoulders up, back and down in a slow circle.",
+                "Do all reps, then reverse the direction.",
+            ),
+            cues = listOf("Make the circle as big as you can.", "Keep your arms loose, not swinging.", "Breathe normally throughout."),
+            mistakes = listOf("Small, lazy circles that don't open the joint.", "Hunching your neck forward.", "Rushing through both directions."),
+        ),
+        "Reverse snow angel" to guide(
+            steps = listOf(
+                "Lie face down, or hinge forward from standing, with your arms by your sides, palms down.",
+                "Sweep your arms out and up toward overhead, squeezing your shoulder blades together.",
+                "Reverse the path back down with control and repeat.",
+            ),
+            cues = listOf("Lead with your thumbs turning up as you lift.", "Squeeze your shoulder blades at the top.", "Keep the movement slow on the way down."),
+            mistakes = listOf("Shrugging your shoulders up toward your ears.", "Using momentum instead of control.", "Arching your lower back to gain range."),
+        ),
     )
 }
