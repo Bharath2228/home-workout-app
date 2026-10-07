@@ -136,7 +136,7 @@ fun OnboardingScreen(onDone: (openSettings: Boolean, goal: Goal, program: Split,
             }
 
             Button(onClick = { onDone(true, goal, program, level) }, modifier = Modifier.fillMaxWidth()) {
-                Text("Check my plates and rod weight")
+                Text("Check my plates")
             }
             OutlinedButton(onClick = { onDone(false, goal, program, level) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Start with the defaults")

@@ -8,7 +8,7 @@ import org.junit.Test
 
 class PlateLoaderAndWarmUpTest {
 
-    private val equipment = Equipment.Default.copy(rodWeightKg = 1.0)
+    private val equipment = Equipment.Default
 
     @Test
     fun everyAchievableWeightHasAPlateLoadThatAddsUp() {
@@ -17,8 +17,8 @@ class PlateLoaderAndWarmUpTest {
                 val plates = PlateLoader.platesFor(equipment, rig, target)
                 assertNotNull("$rig $target", plates)
                 val total = when (rig) {
-                    Rig.BARBELL -> 2 * equipment.rodWeightKg + 2 * plates!!.sum()
-                    else -> equipment.rodWeightKg + plates!!.sum()
+                    Rig.BARBELL -> 2 * plates!!.sum()
+                    else -> plates!!.sum()
                 }
                 assertEquals("$rig $target", target, total, 1e-9)
             }
@@ -27,13 +27,14 @@ class PlateLoaderAndWarmUpTest {
 
     @Test
     fun usesTheFewestPlates() {
-        val plates = PlateLoader.platesFor(equipment.copy(rodWeightKg = 0.0), Rig.DUMBBELL_PAIR, 8.0)!!
+        val plates = PlateLoader.platesFor(equipment, Rig.DUMBBELL_PAIR, 8.0)!!
         assertEquals(3, plates.size)
     }
 
     @Test
     fun unbuildableWeightIsNull() {
-        assertNull(PlateLoader.platesFor(equipment, Rig.BARBELL, 3.0))
+        // 1.5 total needs 0.75 kg per side, which isn't a multiple of any plate.
+        assertNull(PlateLoader.platesFor(equipment, Rig.BARBELL, 1.5))
         assertNull(PlateLoader.platesFor(equipment, Rig.DUMBBELL_PAIR, 0.2))
     }
 
@@ -41,7 +42,7 @@ class PlateLoaderAndWarmUpTest {
     fun describeNamesTheSide() {
         assertTrue(PlateLoader.describe(equipment, Rig.BARBELL, 14.0)!!.startsWith("Per side"))
         assertTrue(PlateLoader.describe(equipment, Rig.DUMBBELL_PAIR, 6.0)!!.startsWith("Per dumbbell"))
-        assertEquals("Per dumbbell: no plates", PlateLoader.describe(equipment, Rig.DUMBBELL_PAIR, 1.0))
+        assertEquals("Per dumbbell: no plates", PlateLoader.describe(equipment, Rig.DUMBBELL_PAIR, 0.0))
     }
 
     private val squat = Exercise("Barbell back squat", Movement.SQUAT, Rig.BARBELL, 30.0)

@@ -8,7 +8,7 @@ import org.junit.Test
 
 class AdaptationTest {
 
-    private val equipment = Equipment.Default.copy(rodWeightKg = 0.0)
+    private val equipment = Equipment.Default
     private val curl = Exercise("Dumbbell curl", Movement.BICEP, Rig.DUMBBELL_PAIR, 5.0)
     private val reps = 8..10
 

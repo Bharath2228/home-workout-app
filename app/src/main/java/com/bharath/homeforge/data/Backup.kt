@@ -11,7 +11,6 @@ data class Backup(
     val sets: List<LoggedSet>,
     val measurements: List<Measurement>,
     val plates: List<Plate>,
-    val rodWeightKg: Double,
 )
 
 object BackupCodec {
@@ -22,7 +21,6 @@ object BackupCodec {
         put("app", "HomeForge")
         put("version", VERSION)
         put("exportedAt", backup.exportedAt)
-        put("rodWeightKg", backup.rodWeightKg)
         put("plates", JSONArray().apply {
             backup.plates.forEach { put(JSONObject().put("weightKg", it.weightKg).put("count", it.count)) }
         })
@@ -100,7 +98,6 @@ object BackupCodec {
                     Measurement(it.getLong("id"), it.getLong("time"), it.getString("type"), it.getDouble("value"))
                 },
                 plates = root.getJSONArray("plates").objects().map { Plate(it.getDouble("weightKg"), it.getInt("count")) },
-                rodWeightKg = root.getDouble("rodWeightKg"),
             )
         } catch (e: JSONException) {
             throw IllegalArgumentException("This file isn't a valid HomeForge backup.", e)

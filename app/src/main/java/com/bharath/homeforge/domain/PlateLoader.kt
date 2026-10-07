@@ -3,18 +3,16 @@ package com.bharath.homeforge.domain
 object PlateLoader {
 
     /**
-     * Fewest plates (heaviest first) for one rod, or one side of the joined barbell, that reach [targetKg].
+     * Fewest plates (heaviest first) for one dumbbell, or one side of the barbell, that reach [targetKg].
      * Null if that exact weight can't be built.
      */
     fun platesFor(equipment: Equipment, rig: Rig, targetKg: Double): List<Double>? {
-        val rodGrams = grams(equipment.rodWeightKg)
         val targetGrams = grams(targetKg)
         val needed = if (rig == Rig.BARBELL) {
-            val plateTotal = targetGrams - 2 * rodGrams
-            if (plateTotal < 0 || plateTotal % 2 != 0) return null
-            plateTotal / 2
+            if (targetGrams % 2 != 0) return null
+            targetGrams / 2
         } else {
-            targetGrams - rodGrams
+            targetGrams
         }
         if (needed < 0) return null
 
@@ -45,7 +43,7 @@ object PlateLoader {
         val label = when (rig) {
             Rig.BARBELL -> "Per side"
             Rig.DUMBBELL_PAIR -> "Per dumbbell"
-            Rig.SINGLE_DUMBBELL -> "On the rod"
+            Rig.SINGLE_DUMBBELL -> "On the dumbbell"
         }
         return if (plates.isEmpty()) "$label: no plates" else "$label: ${plates.joinToString(" + ") { format(it) }}"
     }

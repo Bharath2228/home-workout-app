@@ -17,7 +17,6 @@ class BackupCodecTest {
         ),
         measurements = listOf(Measurement(id = 1, time = 30, type = "BODY_WEIGHT", value = 78.4)),
         plates = listOf(Plate(5.0, 4), Plate(1.5, 4)),
-        rodWeightKg = 1.0,
     )
 
     @Test

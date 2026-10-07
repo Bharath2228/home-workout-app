@@ -10,7 +10,6 @@ enum class Rig(val label: String) {
 
 data class Equipment(
     val plates: List<Plate>,
-    val rodWeightKg: Double = 1.0,
 ) {
     companion object {
         val Default = Equipment(

@@ -1,14 +1,14 @@
 # HomeForge
 
-An Android workout planner and tracker built around the plates and rods you actually own. Everything is stored on
+An Android workout planner and tracker built around the plates you actually own. Everything is stored on
 the phone, so it works offline.
 
 ## Features
 
 ### Your equipment
-- Enter your plates (weight and count) and the weight of one rod. Add, remove or change them any time.
+- Enter your plates (weight and count, as the total you own). Add, remove or change them any time.
 - Every suggested weight is one you can really build. Three set-ups are handled: a single dumbbell, a pair of
-  dumbbells (both loaded the same) and the two rods joined into one barbell (plates mirrored on both sides).
+  dumbbells (both loaded the same) and a barbell (plates mirrored on both sides).
 - A plate guide shows which plates to load, using the fewest plates, for example "Per side: 5 + 1.5".
 - Warm-up sets for the first heavy lift of a workout, built from loads you can make.
 - A general mobility warm-up checklist shown before every training day, and logged with the workout.

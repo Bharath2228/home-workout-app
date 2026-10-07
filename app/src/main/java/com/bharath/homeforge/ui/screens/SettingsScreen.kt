@@ -26,7 +26,6 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -330,18 +329,27 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
         item {
             Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Equipment", style = MaterialTheme.typography.titleMedium)
+                    Text("Plates you own", style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "Counts are plates you own in total. Pairs and the barbell split them evenly between both rods.",
+                        "Enter the total count of each plate size, like the pair you'd slide onto one weight. " +
+                            "A dumbbell pair or barbell splits that count evenly across its two sides, so 4 plates of " +
+                            "5 kg means 2 per side.",
                         style = MaterialTheme.typography.bodySmall,
                     )
+                    if (equipment.plates.isEmpty()) {
+                        Text(
+                            "No plates added yet — add your first one below.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
                     equipment.plates.forEach { plate ->
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Text("${formatKg(plate.weightKg)} kg", modifier = Modifier.weight(1f))
+                            Text("${formatKg(plate.weightKg)} kg plate", modifier = Modifier.weight(1f))
                             IconButton(onClick = { vm.changePlateCount(plate.weightKg, -1) }) {
                                 Icon(Icons.Filled.Remove, contentDescription = "Fewer ${formatKg(plate.weightKg)} kg plates")
                             }
-                            Text("${plate.count}")
+                            Text("${plate.count} total")
                             IconButton(onClick = { vm.changePlateCount(plate.weightKg, 1) }) {
                                 Icon(Icons.Filled.Add, contentDescription = "More ${formatKg(plate.weightKg)} kg plates")
                             }
@@ -354,7 +362,7 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
                         OutlinedTextField(
                             value = vm.newPlateText,
                             onValueChange = vm::onNewPlateChange,
-                            label = { Text("New plate (kg)") },
+                            label = { Text("New plate size (kg)") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             modifier = Modifier.weight(1f),
@@ -364,15 +372,6 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
                     if (vm.equipmentMessage != null) {
                         Text(vm.equipmentMessage.orEmpty(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                     }
-                    HorizontalDivider()
-                    OutlinedTextField(
-                        value = vm.rodText,
-                        onValueChange = vm::onRodChange,
-                        label = { Text("Weight of one rod (kg)") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.fillMaxWidth(),
-                    )
                 }
             }
         }
@@ -383,7 +382,8 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(rig.label, style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "${weights.size} loads, ${formatKg(weights.first())} to ${formatKg(weights.last())} kg",
+                        "With these plates: ${weights.size} different weights, from ${formatKg(weights.first())} " +
+                            "to ${formatKg(weights.last())} kg.",
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }

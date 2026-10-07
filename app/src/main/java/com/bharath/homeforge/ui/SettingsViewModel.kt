@@ -52,7 +52,6 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
                     sets = dao.allSetsOnce(),
                     measurements = dao.allMeasurementsOnce(),
                     plates = equipment.plates,
-                    rodWeightKg = equipment.rodWeightKg,
                 )
                 withContext(Dispatchers.IO) {
                     val stream = getApplication<Application>().contentResolver.openOutputStream(uri, "wt")
@@ -74,8 +73,7 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 val backup = BackupCodec.decode(text)
                 dao.replaceAll(backup.sessions, backup.sets, backup.measurements)
-                equipmentRepo.save(Equipment(backup.plates, backup.rodWeightKg))
-                rodText = formatKg(backup.rodWeightKg)
+                equipmentRepo.save(Equipment(backup.plates))
                 "Restored ${backup.sessions.size} workouts. Use \"Sync past workouts\" to resend them to Health Connect."
             }.getOrElse { "Import failed: ${it.message}" }
         }
@@ -157,9 +155,6 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
     var newPlateText by mutableStateOf("")
         private set
 
-    var rodText by mutableStateOf(formatKg(equipmentRepo.equipment.value.rodWeightKg))
-        private set
-
     var equipmentMessage by mutableStateOf<String?>(null)
         private set
 
@@ -185,12 +180,6 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
 
     fun onNewPlateChange(value: String) {
         newPlateText = value
-    }
-
-    fun onRodChange(value: String) {
-        rodText = value
-        val kg = value.replace(',', '.').toDoubleOrNull() ?: return
-        if (kg in 0.0..30.0) equipmentRepo.save(equipment.value.copy(rodWeightKg = kg))
     }
 
     fun changePlateCount(weightKg: Double, delta: Int) {

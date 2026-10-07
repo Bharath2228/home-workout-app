@@ -7,7 +7,7 @@ import org.junit.Test
 
 class LoadCalculatorTest {
 
-    private val equipment = Equipment.Default.copy(rodWeightKg = 0.0)
+    private val equipment = Equipment.Default
 
     @Test
     fun singleDumbbell_maxIsAllPlates() {
@@ -46,15 +46,6 @@ class LoadCalculatorTest {
     }
 
     @Test
-    fun rodWeight_isIncluded() {
-        val withRod = equipment.copy(rodWeightKg = 1.0)
-        val pair = LoadCalculator.achievableWeights(withRod, Rig.DUMBBELL_PAIR)
-        val bar = LoadCalculator.achievableWeights(withRod, Rig.BARBELL)
-        assertEquals(1.0, pair.first(), 1e-9)
-        assertEquals(2.0, bar.first(), 1e-9)
-    }
-
-    @Test
     fun snap_picksNearestAchievable() {
         assertEquals(7.5, LoadCalculator.snap(equipment, Rig.DUMBBELL_PAIR, 7.4), 1e-9)
     }
@@ -75,8 +66,8 @@ class LoadCalculatorTest {
     }
 
     @Test
-    fun noPlates_onlyBareRod() {
-        val bare = Equipment(plates = emptyList(), rodWeightKg = 1.0)
-        assertEquals(listOf(1.0), LoadCalculator.achievableWeights(bare, Rig.SINGLE_DUMBBELL))
+    fun noPlates_onlyZero() {
+        val bare = Equipment(plates = emptyList())
+        assertEquals(listOf(0.0), LoadCalculator.achievableWeights(bare, Rig.SINGLE_DUMBBELL))
     }
 }

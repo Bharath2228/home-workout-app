@@ -18,19 +18,16 @@ class EquipmentRepository private constructor(context: Context) {
         state.value = equipment
         prefs.edit()
             .putString(KEY_PLATES, EquipmentCodec.encodePlates(equipment.plates))
-            .putFloat(KEY_ROD, equipment.rodWeightKg.toFloat())
             .apply()
     }
 
     private fun load(): Equipment {
         val raw = prefs.getString(KEY_PLATES, null) ?: return Equipment.Default
-        val rod = prefs.getFloat(KEY_ROD, Equipment.Default.rodWeightKg.toFloat()).toDouble()
-        return Equipment(EquipmentCodec.decodePlates(raw), rod)
+        return Equipment(EquipmentCodec.decodePlates(raw))
     }
 
     companion object {
         private const val KEY_PLATES = "plates"
-        private const val KEY_ROD = "rod_kg"
 
         @Volatile
         private var instance: EquipmentRepository? = null

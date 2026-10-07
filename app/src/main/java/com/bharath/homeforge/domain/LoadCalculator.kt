@@ -6,26 +6,25 @@ object LoadCalculator {
 
     /**
      * All total weights (kg) you can physically build for [rig], sorted ascending.
-     * SINGLE_DUMBBELL: weight of the one dumbbell.
-     * DUMBBELL_PAIR: weight of each dumbbell (both are loaded identically).
-     * BARBELL: total bar weight (both rods joined, plates mirrored on each side).
+     * SINGLE_DUMBBELL: weight of the one dumbbell's plates.
+     * DUMBBELL_PAIR: weight of each dumbbell's plates (both are loaded identically).
+     * BARBELL: total weight of plates on both sides combined.
      */
     fun achievableWeights(equipment: Equipment, rig: Rig): List<Double> {
-        val rodGrams = toGrams(equipment.rodWeightKg)
         val plates = equipment.plates.filter { it.count > 0 && it.weightKg > 0 }
 
         return when (rig) {
             Rig.SINGLE_DUMBBELL -> {
                 val sums = subsetSums(plates.map { toGrams(it.weightKg) to it.count })
-                sums.map { fromGrams(rodGrams + it) }
+                sums.map { fromGrams(it) }
             }
             Rig.DUMBBELL_PAIR -> {
                 val sums = subsetSums(plates.map { toGrams(it.weightKg) to it.count / 2 })
-                sums.map { fromGrams(rodGrams + it) }
+                sums.map { fromGrams(it) }
             }
             Rig.BARBELL -> {
                 val sums = subsetSums(plates.map { toGrams(it.weightKg) to it.count / 2 })
-                sums.map { fromGrams(2 * rodGrams + 2 * it) }
+                sums.map { fromGrams(2 * it) }
             }
         }.sorted()
     }
