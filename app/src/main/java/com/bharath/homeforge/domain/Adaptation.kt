@@ -1,6 +1,12 @@
 package com.bharath.homeforge.domain
 
-data class SetResult(val weightKg: Double?, val reps: Int)
+enum class Difficulty(val label: String) {
+    EASY("Easy"),
+    OK("OK"),
+    HARD("Hard"),
+}
+
+data class SetResult(val weightKg: Double?, val reps: Int, val difficulty: Difficulty? = null)
 
 data class Suggestion(
     val weightKg: Double?,
@@ -37,6 +43,9 @@ object Adaptation {
         val base = LoadCalculator.snap(equipment, rig, lastWeight)
 
         if (hitAll(last, plannedSets, reps)) {
+            if (feltHard(last)) {
+                return Suggestion(base, plannedSets, reps, "Hit the reps but it felt hard: holding the weight.")
+            }
             val up = LoadCalculator.nextUp(equipment, rig, base)
                 ?: return Suggestion(
                     base,
@@ -44,7 +53,7 @@ object Adaptation {
                     reps,
                     "Heaviest load reached: added a set.",
                 )
-            val wellAbove = last.all { it.reps >= reps.last + 2 }
+            val wellAbove = last.all { it.reps >= reps.last + 2 } || feltEasy(last)
             val bigJump = if (wellAbove) LoadCalculator.nextUp(equipment, rig, up) else null
             return if (bigJump != null) {
                 Suggestion(bigJump, plannedSets, reps, "Reps were well above target: bigger jump.")
@@ -77,6 +86,7 @@ object Adaptation {
 
     private fun bodyweight(exercise: Exercise, last: List<SetResult>, plannedSets: Int, reps: IntRange): Suggestion {
         if (!hitAll(last, plannedSets, reps)) return Suggestion(null, plannedSets, reps, null)
+        if (feltHard(last)) return Suggestion(null, plannedSets, reps, "Hit the reps but it felt hard: holding the target.")
         val step = if (exercise.timed) 5 else 2
         val newTop = last.minOf { it.reps } + step
         val shift = newTop - reps.last
@@ -86,6 +96,17 @@ object Adaptation {
 
     private fun hitAll(session: List<SetResult>, plannedSets: Int, reps: IntRange): Boolean =
         session.size >= plannedSets && session.all { it.reps >= reps.last }
+
+    /** More than half of the rated sets were rated hard. Unrated sets don't count either way. */
+    private fun feltHard(session: List<SetResult>): Boolean {
+        val rated = session.mapNotNull { it.difficulty }
+        return rated.isNotEmpty() && rated.count { it == Difficulty.HARD } * 2 > rated.size
+    }
+
+    private fun feltEasy(session: List<SetResult>): Boolean {
+        val rated = session.mapNotNull { it.difficulty }
+        return rated.isNotEmpty() && rated.all { it == Difficulty.EASY }
+    }
 
     private fun topWeight(equipment: Equipment, rig: Rig, session: List<SetResult>): Double? =
         session.mapNotNull { it.weightKg }.maxOrNull()?.let { LoadCalculator.snap(equipment, rig, it) }

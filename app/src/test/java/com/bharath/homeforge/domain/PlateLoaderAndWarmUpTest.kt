@@ -67,4 +67,33 @@ class PlateLoaderAndWarmUpTest {
         val pushUp = Exercise("Push-up", Movement.HORIZONTAL_PUSH, null)
         assertTrue(WarmUp.sets(equipment, pushUp, 20.0).isEmpty())
     }
+
+    @Test
+    fun generalWarmUpAlwaysOpensWithCardio() {
+        assertEquals("March or jog in place", GeneralWarmUp.movesFor(emptySet()).first().name)
+        assertEquals(1, GeneralWarmUp.movesFor(emptySet()).size)
+    }
+
+    @Test
+    fun legDayGetsLowerBodyMovesNotUpperBody() {
+        val moves = GeneralWarmUp.movesFor(setOf(Movement.SQUAT, Movement.HINGE)).map { it.name }
+        assertTrue(moves.contains("Leg swings"))
+        assertTrue(moves.contains("Bodyweight squat"))
+        assertTrue(moves.none { it == "Shoulder rolls" || it == "Reverse snow angel" })
+    }
+
+    @Test
+    fun pushAndPullBothSurfaceArmCirclesOnlyOnce() {
+        val moves = GeneralWarmUp.movesFor(setOf(Movement.HORIZONTAL_PUSH, Movement.HORIZONTAL_PULL)).map { it.name }
+        assertEquals(1, moves.count { it == "Arm circles" })
+        assertTrue(moves.contains("Shoulder rolls"))
+        assertTrue(moves.contains("Reverse snow angel"))
+    }
+
+    @Test
+    fun coreDayAddsCoreMoves() {
+        val moves = GeneralWarmUp.movesFor(setOf(Movement.CORE)).map { it.name }
+        assertTrue(moves.contains("Cat-cow"))
+        assertTrue(moves.contains("Dead bug"))
+    }
 }

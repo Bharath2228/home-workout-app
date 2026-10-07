@@ -49,15 +49,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bharath.homeforge.domain.Difficulty
 import com.bharath.homeforge.domain.Equipment
 import com.bharath.homeforge.domain.Exercise
 import com.bharath.homeforge.domain.ExerciseLibrary
-import com.bharath.homeforge.domain.GeneralWarmUp
 import com.bharath.homeforge.domain.LevelStatus
 import com.bharath.homeforge.domain.PlateLoader
 import com.bharath.homeforge.domain.ScheduleResult
 import com.bharath.homeforge.domain.Split
 import com.bharath.homeforge.domain.WarmUp
+import com.bharath.homeforge.domain.WarmUpMove
 import kotlinx.coroutines.delay
 import com.bharath.homeforge.ui.formatDuration
 import com.bharath.homeforge.ui.formatKg
@@ -103,11 +104,13 @@ fun LogScreen(onOpenExercise: (String) -> Unit, vm: LogViewModel = viewModel()) 
             restRemaining = vm.restRemaining,
             onAddRest = vm::addRest,
             onSkipRest = vm::skipRest,
-            onSetDone = { vm.startRest(it.planned.restSeconds) },
+            onSetDone = vm::setDone,
             onOpenExercise = onOpenExercise,
             onToggleWarmUp = vm::toggleWarmUp,
+            onToggleSuperset = vm::toggleSuperset,
             onPause = vm::pause,
             onResume = vm::resume,
+            onAutosave = vm::persistActiveWorkout,
         )
     }
 }
@@ -182,8 +185,10 @@ private fun WorkoutPane(
     onSetDone: (ExerciseDraft) -> Unit,
     onOpenExercise: (String) -> Unit,
     onToggleWarmUp: (Int) -> Unit,
+    onToggleSuperset: (ExerciseDraft) -> Unit,
     onPause: () -> Unit,
     onResume: () -> Unit,
+    onAutosave: () -> Unit,
 ) {
     var picking by remember { mutableStateOf(false) }
     val warmUpIndex = workout.exercises.indexOfFirst { WarmUp.eligible(it.planned.exercise) }
@@ -193,6 +198,13 @@ private fun WorkoutPane(
         while (!paused) {
             now = System.currentTimeMillis()
             delay(1000)
+        }
+    }
+    // Catches edits (typed weight/reps, difficulty taps) that don't otherwise trigger a save.
+    LaunchedEffect(workout) {
+        while (true) {
+            delay(5000)
+            onAutosave()
         }
     }
     val elapsedSeconds = ((workout.pausedAt ?: now) - workout.startedAt - workout.pausedMs) / 1000
@@ -240,7 +252,7 @@ private fun WorkoutPane(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
-                WarmUpCard(done = workout.warmUpDone, onToggle = onToggleWarmUp)
+                WarmUpCard(moves = workout.warmUpMoves, done = workout.warmUpDone, onToggle = onToggleWarmUp)
             }
             itemsIndexed(workout.exercises, key = { _, item -> item.id }) { index, exercise ->
                 ExerciseLog(
@@ -249,6 +261,7 @@ private fun WorkoutPane(
                     showWarmUp = index == warmUpIndex,
                     canMoveUp = index > 0,
                     canMoveDown = index < workout.exercises.lastIndex,
+                    canLinkNext = index < workout.exercises.lastIndex,
                     onMoveUp = { onMove(index, -1) },
                     onMoveDown = { onMove(index, 1) },
                     onRemove = { onRemove(index) },
@@ -256,6 +269,7 @@ private fun WorkoutPane(
                     onRemoveSet = { onRemoveSet(exercise) },
                     onSetDone = { onSetDone(exercise) },
                     onInfo = { onOpenExercise(exercise.planned.exercise.name) },
+                    onToggleSuperset = { onToggleSuperset(exercise) },
                 )
             }
             item {
@@ -279,11 +293,11 @@ private fun WorkoutPane(
 }
 
 @Composable
-private fun WarmUpCard(done: List<Boolean>, onToggle: (Int) -> Unit) {
+private fun WarmUpCard(moves: List<WarmUpMove>, done: List<Boolean>, onToggle: (Int) -> Unit) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text("Warm-up", style = MaterialTheme.typography.titleMedium)
-            GeneralWarmUp.moves.forEachIndexed { index, move ->
+            moves.forEachIndexed { index, move ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = done.getOrElse(index) { false }, onCheckedChange = { onToggle(index) })
                     Column(Modifier.weight(1f)) {
@@ -321,6 +335,7 @@ private fun ExerciseLog(
     showWarmUp: Boolean,
     canMoveUp: Boolean,
     canMoveDown: Boolean,
+    canLinkNext: Boolean,
     onMoveUp: () -> Unit,
     onMoveDown: () -> Unit,
     onRemove: () -> Unit,
@@ -328,6 +343,7 @@ private fun ExerciseLog(
     onRemoveSet: () -> Unit,
     onSetDone: () -> Unit,
     onInfo: () -> Unit,
+    onToggleSuperset: () -> Unit,
 ) {
     val planned = exercise.planned
     val unit = if (planned.exercise.timed) "sec" else "reps"
@@ -375,6 +391,13 @@ private fun ExerciseLog(
                     Icon(Icons.Filled.Delete, contentDescription = "Remove exercise")
                 }
             }
+            if (canLinkNext || exercise.isSuperset) {
+                FilterChip(
+                    selected = exercise.isSuperset,
+                    onClick = onToggleSuperset,
+                    label = { Text("Superset with next exercise: no rest in between") },
+                )
+            }
             exercise.sets.forEachIndexed { index, set ->
                 SetRow(index + 1, set, showWeight = planned.exercise.rig != null, unit = unit, onDone = onSetDone)
             }
@@ -388,32 +411,46 @@ private fun ExerciseLog(
 
 @Composable
 private fun SetRow(number: Int, set: SetDraft, showWeight: Boolean, unit: String, onDone: () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Set $number", modifier = Modifier.padding(end = 4.dp))
-        if (showWeight) {
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Set $number", modifier = Modifier.padding(end = 4.dp))
+            if (showWeight) {
+                OutlinedTextField(
+                    value = set.weight,
+                    onValueChange = { set.weight = it },
+                    label = { Text("kg") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.weight(1f),
+                )
+            }
             OutlinedTextField(
-                value = set.weight,
-                onValueChange = { set.weight = it },
-                label = { Text("kg") },
+                value = set.reps,
+                onValueChange = { set.reps = it },
+                label = { Text(unit) },
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.weight(1f),
             )
+            Checkbox(
+                checked = set.done,
+                onCheckedChange = {
+                    set.done = it
+                    if (it) onDone()
+                },
+            )
         }
-        OutlinedTextField(
-            value = set.reps,
-            onValueChange = { set.reps = it },
-            label = { Text(unit) },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.weight(1f),
-        )
-        Checkbox(
-            checked = set.done,
-            onCheckedChange = {
-                set.done = it
-                if (it) onDone()
-            },
-        )
+        if (set.done) {
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("How did it feel?", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = 4.dp))
+                Difficulty.entries.forEach { option ->
+                    FilterChip(
+                        selected = set.difficulty == option,
+                        onClick = { set.difficulty = if (set.difficulty == option) null else option },
+                        label = { Text(option.label) },
+                    )
+                }
+            }
+        }
     }
 }

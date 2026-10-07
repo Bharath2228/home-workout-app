@@ -15,6 +15,7 @@ import androidx.health.connect.client.units.Energy
 import androidx.health.connect.client.units.Mass
 import com.bharath.homeforge.domain.CalorieEstimator
 import com.bharath.homeforge.domain.Exercise
+import com.bharath.homeforge.domain.Goal
 import com.bharath.homeforge.domain.ExerciseLibrary
 import com.bharath.homeforge.domain.Movement
 import com.bharath.homeforge.domain.Split
@@ -45,7 +46,7 @@ class HealthConnectManager(private val context: Context) {
             client().permissionController.getGrantedPermissions().containsAll(permissions)
 
     /** Writes each workout, plus an estimated calorie record when [bodyWeightKg] is known. */
-    suspend fun writeSessions(sessions: List<SessionWithSets>, bodyWeightKg: Double?) {
+    suspend fun writeSessions(sessions: List<SessionWithSets>, bodyWeightKg: Double?, goal: Goal) {
         if (sessions.isEmpty()) return
         // An ever-increasing version lets a re-sync overwrite the earlier record after an edit.
         val version = System.currentTimeMillis()
@@ -53,7 +54,7 @@ class HealthConnectManager(private val context: Context) {
         sessions.forEach { item ->
             val window = windowFor(item.session)
             records += sessionRecord(item, window, version)
-            if (bodyWeightKg != null) records += caloriesRecord(item, window, bodyWeightKg, version)
+            if (bodyWeightKg != null) records += caloriesRecord(item, window, bodyWeightKg, goal, version)
         }
         client().insertRecords(records)
     }
@@ -145,6 +146,7 @@ class HealthConnectManager(private val context: Context) {
         item: SessionWithSets,
         window: Window,
         bodyWeightKg: Double,
+        goal: Goal,
         version: Long,
     ): ActiveCaloriesBurnedRecord {
         val minutes = Duration.between(window.start, window.end).toMillis() / 60_000.0
@@ -153,7 +155,7 @@ class HealthConnectManager(private val context: Context) {
             startZoneOffset = window.startOffset,
             endTime = window.end,
             endZoneOffset = window.endOffset,
-            energy = Energy.kilocalories(CalorieEstimator.activeKcal(bodyWeightKg, minutes)),
+            energy = Energy.kilocalories(CalorieEstimator.activeKcal(bodyWeightKg, minutes, goal)),
             metadata = Metadata(
                 clientRecordId = "homeforge-calories-${item.session.id}",
                 clientRecordVersion = version,

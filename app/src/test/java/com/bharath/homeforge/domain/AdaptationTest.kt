@@ -93,4 +93,30 @@ class AdaptationTest {
         val s = Adaptation.suggest(equipment, pushUp, listOf(listOf(SetResult(null, 9), SetResult(null, 8), SetResult(null, 7))), 3, reps)
         assertEquals(reps, s.reps)
     }
+
+    private fun hardSession(weight: Double, vararg repCounts: Int) =
+        repCounts.map { SetResult(weight, it, Difficulty.HARD) }
+
+    @Test
+    fun allSetsHitButFeltHard_holdsTheWeightInstead() {
+        val s = suggest(listOf(hardSession(5.0, 10, 10, 10)))
+        assertEquals(5.0, s.weightKg!!, 1e-9)
+        assertTrue(s.reason!!.contains("hard", ignoreCase = true))
+    }
+
+    @Test
+    fun allSetsHitAndFeltEasy_makesABiggerJumpEvenWithoutExtraReps() {
+        val up = LoadCalculator.nextUp(equipment, Rig.DUMBBELL_PAIR, 5.0)!!
+        val twoUp = LoadCalculator.nextUp(equipment, Rig.DUMBBELL_PAIR, up)!!
+        val easy = listOf(SetResult(5.0, 10, Difficulty.EASY), SetResult(5.0, 10, Difficulty.EASY), SetResult(5.0, 10, Difficulty.EASY))
+        assertEquals(twoUp, suggest(listOf(easy)).weightKg!!, 1e-9)
+    }
+
+    @Test
+    fun bodyweight_hitButFeltHard_holdsTheTarget() {
+        val pushUp = Exercise("Push-up", Movement.HORIZONTAL_PUSH, null)
+        val hard = List(3) { SetResult(null, 10, Difficulty.HARD) }
+        val s = Adaptation.suggest(equipment, pushUp, listOf(hard), 3, reps)
+        assertEquals(reps, s.reps)
+    }
 }

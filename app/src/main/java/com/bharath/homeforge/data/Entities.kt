@@ -43,4 +43,6 @@ data class LoggedSet(
     val weightKg: Double?,
     val reps: Int,
     val loggedAt: Long,
+    /** How hard the set felt: "EASY", "OK" or "HARD" from [com.bharath.homeforge.domain.Difficulty]. Optional. */
+    val difficulty: String? = null,
 )

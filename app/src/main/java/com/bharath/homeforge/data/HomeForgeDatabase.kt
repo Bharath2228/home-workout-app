@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [WorkoutSession::class, LoggedSet::class, Measurement::class],
-    version = 3,
+    version = 4,
     exportSchema = false,
 )
 abstract class HomeForgeDatabase : RoomDatabase() {
@@ -37,13 +37,19 @@ abstract class HomeForgeDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `logged_sets` ADD COLUMN `difficulty` TEXT")
+            }
+        }
+
         fun get(context: Context): HomeForgeDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     HomeForgeDatabase::class.java,
                     "homeforge.db",
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build().also { instance = it }
             }
     }
 }

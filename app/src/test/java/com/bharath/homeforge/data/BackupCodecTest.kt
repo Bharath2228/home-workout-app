@@ -28,6 +28,14 @@ class BackupCodecTest {
     }
 
     @Test
+    fun roundTripKeepsDifficulty() {
+        val withDifficulty = backup.copy(sets = listOf(backup.sets[0].copy(difficulty = "HARD"), backup.sets[1]))
+        val decoded = BackupCodec.decode(BackupCodec.encode(withDifficulty))
+        assertEquals("HARD", decoded.sets[0].difficulty)
+        assertNull(decoded.sets[1].difficulty)
+    }
+
+    @Test
     fun garbageIsRejected() {
         try {
             BackupCodec.decode("not json")

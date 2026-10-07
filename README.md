@@ -35,9 +35,14 @@ the phone, so it works offline.
 ### Logging a workout
 - Log weight and reps for each set, with last time's result shown.
 - Add, remove and reorder exercises and sets during a workout.
+- Rate how a set felt (easy, OK, hard) once you tick it done. Weight and rep suggestions use that alongside your
+  reps: a hard set holds the weight even if you hit every rep, and an easy set can jump further.
+- Link an exercise to the next one as a superset: no rest timer between them, only after the pair.
 - A rest timer starts when you tick a set, with vibration and a beep when it ends.
 - Weight, sets and reps adapt to how your last sessions went, and each change shows a short reason: weight up,
   hold, one step lighter, a deload after three stalled sessions, or an extra set once you reach your heaviest load.
+- Pause a workout (phone call, interruption) and resume later; the paused time isn't counted in the length.
+- The in-progress workout is saved as you go, so it survives the app being closed or killed, not just backgrounded.
 - Edit or delete past workouts and sets.
 - A running timer shows how long the workout has taken. The length is saved with each workout and shown in your
   history, and the start and end times go to Health Connect.
@@ -50,7 +55,7 @@ the phone, so it works offline.
 
 ### Health Connect (optional)
 - Sends each workout to Health Connect as a strength-training session, with the exercises and reps.
-- Adds an estimated calorie burn (from your body weight and workout length) and your body weight.
+- Adds an estimated calorie burn (from your body weight, workout length and training goal) and your body weight.
 - Deleting or editing a workout updates Health Connect. Needs a real phone with Health Connect.
 
 ### Everything else
@@ -71,6 +76,8 @@ Settings > Picture credits, and in `app/src/main/java/com/bharath/homeforge/doma
 - Reminders can arrive a few minutes late and don't check whether you already trained.
 - Some exercises have no picture yet, only written instructions.
 - Data lives on the phone. Use Settings > Backup to keep a copy.
+- Supersets still log each exercise's sets one after another (no rest in between); they don't make you alternate
+  single sets back and forth.
 
 ## Tech
 

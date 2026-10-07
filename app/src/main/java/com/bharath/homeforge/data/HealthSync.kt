@@ -7,6 +7,7 @@ class HealthSync(context: Context, private val dao: WorkoutDao) {
 
     val manager = HealthConnectManager(context)
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    private val userPrefsRepo = UserPrefsRepository.get(context)
 
     var enabled: Boolean
         get() = prefs.getBoolean(KEY_ENABLED, false)
@@ -29,7 +30,11 @@ class HealthSync(context: Context, private val dao: WorkoutDao) {
     suspend fun syncSessionIfEnabled(sessionId: Long): Boolean {
         if (!enabled || !manager.hasAllPermissions()) return false
         val session = dao.sessionById(sessionId) ?: return false
-        manager.writeSessions(listOf(SessionWithSets(session, dao.setsForSession(sessionId))), bodyWeightKg)
+        manager.writeSessions(
+            listOf(SessionWithSets(session, dao.setsForSession(sessionId))),
+            bodyWeightKg,
+            userPrefsRepo.userPrefs.value.goal,
+        )
         return true
     }
 
@@ -41,7 +46,7 @@ class HealthSync(context: Context, private val dao: WorkoutDao) {
     /** Re-sends every saved workout. Safe to repeat: records are keyed by a client id, so no duplicates. */
     suspend fun syncAll(): Int {
         val sessions = dao.allSessions().map { SessionWithSets(it, dao.setsForSession(it.id)) }
-        manager.writeSessions(sessions, bodyWeightKg)
+        manager.writeSessions(sessions, bodyWeightKg, userPrefsRepo.userPrefs.value.goal)
         return sessions.size
     }
 

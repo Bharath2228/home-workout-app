@@ -49,6 +49,7 @@ object BackupCodec {
                     .put("reps", it.reps)
                     .put("loggedAt", it.loggedAt)
                 if (it.weightKg != null) set.put("weightKg", it.weightKg)
+                if (it.difficulty != null) set.put("difficulty", it.difficulty)
                 put(set)
             }
         })
@@ -86,6 +87,7 @@ object BackupCodec {
                     weightKg = if (it.has("weightKg") && !it.isNull("weightKg")) it.getDouble("weightKg") else null,
                     reps = it.getInt("reps"),
                     loggedAt = it.getLong("loggedAt"),
+                    difficulty = it.optString("difficulty", null),
                 )
             }
             require(sets.all { it.sessionId in sessionIds }) { "Backup has sets that belong to no workout." }
