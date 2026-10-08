@@ -9,14 +9,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -33,6 +36,7 @@ import com.bharath.homeforge.domain.DayStatus
 import com.bharath.homeforge.domain.PlanHelper
 import com.bharath.homeforge.domain.ScheduleEntry
 import com.bharath.homeforge.ui.CalendarViewModel
+import com.bharath.homeforge.ui.theme.BackHeader
 import com.bharath.homeforge.ui.theme.Plate
 import com.bharath.homeforge.ui.theme.PlateAccent
 import java.time.DayOfWeek
@@ -52,12 +56,7 @@ fun CalendarScreen(onBack: () -> Unit, vm: CalendarViewModel = viewModel()) {
     val history = schedule.entries.filter { it.status != DayStatus.TODAY && it.status != DayStatus.PLANNED }.reversed()
 
     Column(Modifier.fillMaxSize().padding(top = 8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-            }
-            Text("Calendar", style = MaterialTheme.typography.headlineMedium)
-        }
+        BackHeader("Calendar", onBack)
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -98,7 +97,10 @@ fun CalendarScreen(onBack: () -> Unit, vm: CalendarViewModel = viewModel()) {
             item {
                 Plate(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Training days", style = MaterialTheme.typography.titleMedium)
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Icon(Icons.Filled.CalendarToday, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Text("Training days", style = MaterialTheme.typography.titleMedium)
+                        }
                         Row(
                             Modifier.horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -138,12 +140,12 @@ fun CalendarScreen(onBack: () -> Unit, vm: CalendarViewModel = viewModel()) {
 
 @Composable
 private fun EntryRow(entry: ScheduleEntry, program: com.bharath.homeforge.domain.Split, today: Long) {
-    val (label, color) = when (entry.status) {
-        DayStatus.DONE -> "Done" to MaterialTheme.colorScheme.primary
-        DayStatus.EXTRA -> "Done (extra)" to MaterialTheme.colorScheme.primary
-        DayStatus.MISSED -> "Missed" to MaterialTheme.colorScheme.error
-        DayStatus.TODAY -> "Today" to MaterialTheme.colorScheme.tertiary
-        DayStatus.PLANNED -> "Planned" to MaterialTheme.colorScheme.onSurfaceVariant
+    val (label, color, icon) = when (entry.status) {
+        DayStatus.DONE -> Triple("Done", MaterialTheme.colorScheme.primary, Icons.Filled.CheckCircle)
+        DayStatus.EXTRA -> Triple("Done (extra)", MaterialTheme.colorScheme.primary, Icons.Filled.CheckCircle)
+        DayStatus.MISSED -> Triple("Missed", MaterialTheme.colorScheme.error, Icons.Filled.Cancel)
+        DayStatus.TODAY -> Triple("Today", MaterialTheme.colorScheme.tertiary, Icons.Filled.Schedule)
+        DayStatus.PLANNED -> Triple("Planned", MaterialTheme.colorScheme.onSurfaceVariant, Icons.Filled.Schedule)
     }
     val highlight = entry.epochDay == today
     Plate(
@@ -160,7 +162,9 @@ private fun EntryRow(entry: ScheduleEntry, program: com.bharath.homeforge.domain
                 )
                 Text(PlanHelper.focusText(program, entry.dayIndex), style = MaterialTheme.typography.bodySmall)
             }
-            Text(label, color = if (color == Color.Unspecified) MaterialTheme.colorScheme.onSurface else color, style = MaterialTheme.typography.labelLarge)
+            val labelColor = if (color == Color.Unspecified) MaterialTheme.colorScheme.onSurface else color
+            Icon(icon, contentDescription = null, tint = labelColor, modifier = Modifier.size(16.dp).padding(end = 4.dp))
+            Text(label, color = labelColor, style = MaterialTheme.typography.labelLarge)
         }
     }
 }

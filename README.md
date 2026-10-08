@@ -14,9 +14,10 @@ the phone, so it works offline.
 - A general mobility warm-up checklist shown before every training day, and logged with the workout.
 
 ### Plans, calendar and levels
-- Three plans, chosen by how many days a week you can train: Full body (2 to 3 days), Push / Pull / Legs
-  (3 to 4 days) and 6-day Push / Pull / Legs (5 to 6 days). Each has a plain-words description.
-- Readable day names (Day 1, Push 1, Legs 2) and a line saying which muscles the day trains.
+- Two plans, chosen by how many days a week you can train: Full body (2 to 3 days) and a 6-day body-part
+  split (Chest, Back, Legs, Shoulders, Arms, Core), for experienced lifters training 5 to 6 days a week.
+  Each has a plain-words description.
+- Readable day names (Day 1, Chest, Legs) and a line saying which muscles the day trains.
 - An optional Core day for a rest day. Every other training day already ends with core work.
 - A calendar with a start date and your training weekdays. A missed workout stays next and later dates slide back,
   so no part of the plan is skipped. Workouts on rest days count as extras. Weeks, done and missed counts are shown.

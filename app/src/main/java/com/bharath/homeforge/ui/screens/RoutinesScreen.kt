@@ -7,11 +7,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +40,8 @@ import com.bharath.homeforge.domain.RoutineGenerator
 import com.bharath.homeforge.ui.RoutinesViewModel
 import com.bharath.homeforge.ui.formatClock
 import com.bharath.homeforge.ui.theme.Plate
+import com.bharath.homeforge.ui.theme.ScreenHeader
+import com.bharath.homeforge.ui.theme.StepBadge
 
 @Composable
 fun RoutinesScreen(onOpenExercise: (String) -> Unit, onOpenCalendar: () -> Unit, vm: RoutinesViewModel = viewModel()) {
@@ -66,44 +71,35 @@ fun RoutinesScreen(onOpenExercise: (String) -> Unit, onOpenCalendar: () -> Unit,
     )
 
     Column(Modifier.fillMaxSize().padding(top = 16.dp)) {
-        Text(
-            "Routines",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(horizontal = 16.dp),
-        )
-        if (rotation.enabled) {
-            Text(
-                "Exercise block ${rotation.block() + 1}, week ${rotation.week()} of ${Rotation.WEEKS_PER_BLOCK}",
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-        }
+        ScreenHeader("Routines")
 
-        PlanHeader(
+        PlanSummary(
             program = program,
             headline = scheduleHeadline(program, schedule, userPrefs.startEpochDay),
+            rotationText = if (rotation.enabled) {
+                "Exercise block ${rotation.block() + 1}, week ${rotation.week()} of ${Rotation.WEEKS_PER_BLOCK}"
+            } else {
+                null
+            },
+            status = levelStatus,
+            noEquipment = userPrefs.noEquipment,
+            onNoEquipmentChange = vm::setNoEquipment,
+            active = active,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             onChangePlan = { picking = true },
             onOpenCalendar = onOpenCalendar,
         )
 
-        LevelAndGearRow(
-            status = levelStatus,
-            noEquipment = userPrefs.noEquipment,
-            onNoEquipmentChange = vm::setNoEquipment,
-            modifier = Modifier.padding(horizontal = 16.dp),
-        )
-
         PlanDayTabs(program, tab, nextDay) { chosenTab = it }
-        DayInfo(active, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            items(routine.items, key = { it.slotIndex }) { item ->
+            itemsIndexed(routine.items, key = { _, item -> item.slotIndex }) { index, item ->
                 ExerciseCard(
+                    step = index + 1,
                     item = item,
                     equipment = equipment,
                     onInfo = { onOpenExercise(item.exercise.name) },
@@ -130,12 +126,13 @@ fun RoutinesScreen(onOpenExercise: (String) -> Unit, onOpenCalendar: () -> Unit,
 }
 
 @Composable
-private fun ExerciseCard(item: PlannedExercise, equipment: Equipment, onInfo: () -> Unit, onSwap: () -> Unit) {
+private fun ExerciseCard(step: Int, item: PlannedExercise, equipment: Equipment, onInfo: () -> Unit, onSwap: () -> Unit) {
     Plate(Modifier.fillMaxWidth()) {
         Row(
             Modifier.padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            StepBadge(step, modifier = Modifier.padding(end = 12.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(item.exercise.name, style = MaterialTheme.typography.titleMedium)
                 val unit = if (item.exercise.timed) " sec" else " reps"
@@ -144,11 +141,30 @@ private fun ExerciseCard(item: PlannedExercise, equipment: Equipment, onInfo: ()
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Text(
-                    "${loadText(item)}, rest ${formatClock(item.restSeconds)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Icon(
+                        Icons.Filled.FitnessCenter,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Text(
+                        loadText(item),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Icon(
+                        Icons.Filled.Timer,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(14.dp).padding(start = 4.dp),
+                    )
+                    Text(
+                        "rest ${formatClock(item.restSeconds)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 val rig = item.exercise.rig
                 val plates = if (rig != null && item.weightKg != null) PlateLoader.describe(equipment, rig, item.weightKg) else null
                 if (plates != null) {

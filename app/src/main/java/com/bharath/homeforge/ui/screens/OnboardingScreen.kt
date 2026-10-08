@@ -8,9 +8,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
@@ -26,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.bharath.homeforge.domain.Goal
 import com.bharath.homeforge.domain.Level
@@ -53,24 +58,27 @@ fun OnboardingScreen(onDone: (openSettings: Boolean, goal: Goal, program: Split,
                 Text("Welcome to HomeForge", style = MaterialTheme.typography.headlineLarge)
             }
             Text(
-                "A workout planner and tracker built around the plates and rods you actually own.",
+                "A workout planner and tracker built around the plates you actually own.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             Section(
+                Icons.Filled.FitnessCenter,
                 "Weights you can really load",
-                "Suggested weights are always ones you can build with your plates. Two rods can be loaded as a " +
-                    "pair of dumbbells, or joined into one barbell. The barbell takes plates on both sides, " +
-                    "so its weight moves in bigger steps than a dumbbell does.",
+                "Suggested weights are always ones you can build with your plates. A dumbbell pair and a " +
+                    "barbell split your plate counts evenly, so the barbell moves in bigger steps than a " +
+                    "dumbbell does.",
             )
             Section(
+                Icons.Filled.EditNote,
                 "Plan, log, progress",
                 "Pick a plan, and the app tells you which workout is next. Log your sets, and it suggests a " +
                     "heavier weight once you hit the top of the rep range on every set. Swap, reorder or add " +
                     "exercises whenever you like.",
             )
             Section(
+                Icons.Filled.MonitorHeart,
                 "Health Connect (optional)",
                 "Send finished workouts to Health Connect from Settings. Calories are a rough estimate " +
                     "based on your body weight.",
@@ -146,9 +154,12 @@ fun OnboardingScreen(onDone: (openSettings: Boolean, goal: Goal, program: Split,
 }
 
 @Composable
-private fun Section(title: String, body: String) {
+private fun Section(icon: ImageVector, title: String, body: String) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(title, style = MaterialTheme.typography.titleMedium)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+            Text(title, style = MaterialTheme.typography.titleMedium)
+        }
         Text(body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

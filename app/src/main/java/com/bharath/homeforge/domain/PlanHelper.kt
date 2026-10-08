@@ -8,7 +8,7 @@ object PlanHelper {
 
     /** The usual training weekdays for a plan (1 = Monday ... 7 = Sunday). The user can change them. */
     fun defaultTrainingDays(program: Split): Set<Int> = when (program) {
-        Split.SIX_DAY_PPL -> setOf(1, 2, 3, 4, 5, 6)
+        Split.BODY_PART_SPLIT -> setOf(1, 2, 3, 4, 5, 6)
         Split.CORE_DAY -> emptySet()
         else -> setOf(1, 3, 5)
     }

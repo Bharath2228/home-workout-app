@@ -112,8 +112,8 @@ class LevelTest {
 
     @Test
     fun higherLevelsDoMoreSetsAndStartHeavier() {
-        val beginner = RoutineGenerator.generate(Split.PUSH_PULL_LEGS, 0, equipment, level = Level.BEGINNER)
-        val advanced = RoutineGenerator.generate(Split.PUSH_PULL_LEGS, 0, equipment, level = Level.ADVANCED)
+        val beginner = RoutineGenerator.generate(Split.BODY_PART_SPLIT, 0, equipment, level = Level.BEGINNER)
+        val advanced = RoutineGenerator.generate(Split.BODY_PART_SPLIT, 0, equipment, level = Level.ADVANCED)
         assertTrue(beginner.items.sumOf { it.sets } < advanced.items.sumOf { it.sets })
         assertNotEquals(beginner.items.map { it.exercise }, advanced.items.map { it.exercise })
 

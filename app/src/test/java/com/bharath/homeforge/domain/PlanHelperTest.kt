@@ -16,8 +16,8 @@ class PlanHelperTest {
     fun nextDayAdvancesAndWraps() {
         assertEquals(1, PlanHelper.nextDay(Split.FULL_BODY, 0))
         assertEquals(0, PlanHelper.nextDay(Split.FULL_BODY, 2))
-        assertEquals(0, PlanHelper.nextDay(Split.SIX_DAY_PPL, 5))
-        assertEquals(4, PlanHelper.nextDay(Split.SIX_DAY_PPL, 3))
+        assertEquals(0, PlanHelper.nextDay(Split.BODY_PART_SPLIT, 5))
+        assertEquals(4, PlanHelper.nextDay(Split.BODY_PART_SPLIT, 3))
     }
 
     @Test
@@ -32,9 +32,9 @@ class PlanHelperTest {
 
     @Test
     fun focusNamesTheRightMuscles() {
-        val push = PlanHelper.focusText(Split.PUSH_PULL_LEGS, 0)
-        assertTrue(push.contains("chest") && push.contains("triceps"))
-        val legs = PlanHelper.focusText(Split.PUSH_PULL_LEGS, 2)
+        val chest = PlanHelper.focusText(Split.BODY_PART_SPLIT, 0)
+        assertTrue(chest.contains("chest") && chest.contains("triceps"))
+        val legs = PlanHelper.focusText(Split.BODY_PART_SPLIT, 2)
         assertTrue(legs.contains("quads") && legs.contains("calves"))
         assertFalse(legs.contains("chest"))
     }

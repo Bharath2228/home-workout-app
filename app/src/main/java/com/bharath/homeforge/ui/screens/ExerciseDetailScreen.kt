@@ -14,12 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -37,6 +33,9 @@ import com.bharath.homeforge.domain.ExerciseGuides
 import com.bharath.homeforge.domain.ExerciseLibrary
 import com.bharath.homeforge.domain.ExerciseMediaLibrary
 import com.bharath.homeforge.domain.Rig
+import com.bharath.homeforge.ui.theme.BackHeader
+import com.bharath.homeforge.ui.theme.BulletDot
+import com.bharath.homeforge.ui.theme.StepBadge
 
 @Composable
 fun ExerciseDetailScreen(name: String, onBack: () -> Unit) {
@@ -46,12 +45,7 @@ fun ExerciseDetailScreen(name: String, onBack: () -> Unit) {
     val media = remember(name) { ExerciseMediaLibrary.forExercise(name) }
 
     Column(Modifier.fillMaxSize().padding(top = 8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-            }
-            Text(name, style = MaterialTheme.typography.headlineSmall)
-        }
+        BackHeader(name, onBack)
 
         Column(
             Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
@@ -106,13 +100,8 @@ fun ExerciseDetailScreen(name: String, onBack: () -> Unit) {
             if (guide != null) {
                 Section("How to do it") {
                     guide.steps.forEachIndexed { index, step ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Text(
-                                "${index + 1}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(top = 1.dp),
-                            )
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
+                            StepBadge(index + 1)
                             Text(step, style = MaterialTheme.typography.bodyMedium)
                         }
                     }
@@ -149,7 +138,7 @@ private fun Section(title: String, content: @Composable () -> Unit) {
 @Composable
 private fun Bulleted(text: String) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text("-", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+        BulletDot()
         Text(text, style = MaterialTheme.typography.bodyMedium)
     }
 }

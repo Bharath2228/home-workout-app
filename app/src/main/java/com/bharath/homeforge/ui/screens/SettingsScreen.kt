@@ -15,13 +15,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Autorenew
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.MonitorHeart
+import androidx.compose.material.icons.filled.MonitorWeight
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -61,6 +69,7 @@ import com.bharath.homeforge.domain.Rotation
 import com.bharath.homeforge.ui.SettingsViewModel
 import com.bharath.homeforge.ui.formatKg
 import com.bharath.homeforge.ui.theme.Plate
+import com.bharath.homeforge.ui.theme.Spacing
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -105,15 +114,15 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.refresh() }
 
     LazyColumn(
-        modifier = Modifier.fillMaxWidth().padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxWidth().padding(Spacing.screen),
+        verticalArrangement = Arrangement.spacedBy(Spacing.cardGap),
     ) {
         item { Text("Settings", style = MaterialTheme.typography.headlineMedium) }
 
         item {
             Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Health Connect", style = MaterialTheme.typography.titleMedium)
+                    SectionTitle(Icons.Filled.MonitorHeart, "Health Connect")
                     when {
                         vm.sdkStatus == HealthConnectClient.SDK_UNAVAILABLE ->
                             Text("Health Connect is not supported on this device.")
@@ -144,7 +153,7 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
         item {
             Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Body weight", style = MaterialTheme.typography.titleMedium)
+                    SectionTitle(Icons.Filled.MonitorWeight, "Body weight")
                     Text(
                         "Used to estimate calories burned. The estimate is rough, not a measurement.",
                         style = MaterialTheme.typography.bodySmall,
@@ -167,7 +176,7 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
         item {
             Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("About the pictures", style = MaterialTheme.typography.titleMedium)
+                    SectionTitle(Icons.Filled.PhotoLibrary, "About the pictures")
                     Text(
                         "Exercise pictures come from the wger.de exercise database under Creative Commons licenses.",
                         style = MaterialTheme.typography.bodySmall,
@@ -180,7 +189,7 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
         item {
             Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Backup", style = MaterialTheme.typography.titleMedium)
+                    SectionTitle(Icons.Filled.CloudUpload, "Backup")
                     Text(
                         "Your workouts, measurements and equipment live only on this phone. " +
                             "Save a backup file somewhere safe, such as Drive.",
@@ -200,7 +209,7 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
         item {
             Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Level and equipment", style = MaterialTheme.typography.titleMedium)
+                    SectionTitle(Icons.Filled.FitnessCenter, "Level and equipment")
                     Text(levelText(levelStatus), style = MaterialTheme.typography.bodyMedium)
                     Text(levelStatus.level.description, style = MaterialTheme.typography.bodySmall)
                     Text("Your starting level", style = MaterialTheme.typography.labelLarge)
@@ -235,7 +244,7 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
         item {
             Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Training goal", style = MaterialTheme.typography.titleMedium)
+                    SectionTitle(Icons.Filled.Flag, "Training goal")
                     Row(
                         Modifier.horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -260,7 +269,7 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
         item {
             Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Reminders", style = MaterialTheme.typography.titleMedium)
+                    SectionTitle(Icons.Filled.Notifications, "Reminders")
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text("Remind me on training days", modifier = Modifier.weight(1f))
                         Switch(
@@ -305,7 +314,7 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
         item {
             Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Exercise rotation", style = MaterialTheme.typography.titleMedium)
+                    SectionTitle(Icons.Filled.Autorenew, "Exercise rotation")
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             "Switch to new exercise variations every ${Rotation.WEEKS_PER_BLOCK} weeks",
@@ -329,7 +338,7 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
         item {
             Plate(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Plates you own", style = MaterialTheme.typography.titleMedium)
+                    SectionTitle(Icons.Filled.FitnessCenter, "Plates you own")
                     Text(
                         "Enter the total count of each plate size, like the pair you'd slide onto one weight. " +
                             "A dumbbell pair or barbell splits that count evenly across its two sides, so 4 plates of " +
@@ -376,19 +385,33 @@ fun SettingsScreen(onOpenCredits: () -> Unit, vm: SettingsViewModel = viewModel(
             }
         }
 
-        items(Rig.entries) { rig ->
-            val weights = remember(equipment, rig) { LoadCalculator.achievableWeights(equipment, rig) }
+        item {
             Plate(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(rig.label, style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        "With these plates: ${weights.size} different weights, from ${formatKg(weights.first())} " +
-                            "to ${formatKg(weights.last())} kg.",
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(Spacing.inner)) {
+                    SectionTitle(Icons.Filled.FitnessCenter, "Achievable loads")
+                    Rig.entries.forEach { rig ->
+                        val weights = remember(equipment, rig) { LoadCalculator.achievableWeights(equipment, rig) }
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(rig.label, style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                "${weights.size} different weights, ${formatKg(weights.first())} to " +
+                                    "${formatKg(weights.last())} kg",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SectionTitle(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+        Text(text, style = MaterialTheme.typography.titleMedium)
     }
 }
 

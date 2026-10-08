@@ -2,7 +2,6 @@ package com.bharath.homeforge.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -15,7 +14,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -33,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.input.KeyboardType
@@ -49,10 +52,12 @@ import com.bharath.homeforge.domain.Split
 import com.bharath.homeforge.domain.Streaks
 import com.bharath.homeforge.ui.ProgressViewModel
 import com.bharath.homeforge.ui.formatKg
+import com.bharath.homeforge.ui.theme.EmptyState
 import com.bharath.homeforge.ui.theme.Plate
 import com.bharath.homeforge.ui.theme.PlateAccent
-import com.bharath.homeforge.ui.theme.ReadoutTextStyle
 import com.bharath.homeforge.ui.theme.ReadoutTextStyleSmall
+import com.bharath.homeforge.ui.theme.ScreenHeader
+import com.bharath.homeforge.ui.theme.StatTile
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
@@ -80,18 +85,14 @@ fun ProgressScreen(onOpenHistory: () -> Unit, vm: ProgressViewModel = viewModel(
     val thisWeek = Streaks.workoutsThisWeek(workoutDays, today)
 
     Column(Modifier.fillMaxSize().padding(top = 16.dp)) {
-        Text(
-            "Progress",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(horizontal = 16.dp),
-        )
+        ScreenHeader("Progress")
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            StatGauge("Logged", sessionCount.toString(), Modifier.weight(1f))
-            StatGauge("Streak", weeksText(streak), Modifier.weight(1f))
-            StatGauge("This week", thisWeek.toString(), Modifier.weight(1f))
+            StatTile(sessionCount.toString(), "Logged", Modifier.weight(1f), icon = Icons.Filled.ShowChart)
+            StatTile(weeksText(streak), "Streak", Modifier.weight(1f), icon = Icons.Filled.LocalFireDepartment)
+            StatTile(thisWeek.toString(), "This week", Modifier.weight(1f), icon = Icons.Filled.CalendarMonth)
         }
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -123,16 +124,6 @@ fun ProgressScreen(onOpenHistory: () -> Unit, vm: ProgressViewModel = viewModel(
 private fun weeksText(weeks: Int): String = if (weeks == 1) "1 week" else "$weeks weeks"
 
 @Composable
-private fun StatGauge(label: String, value: String, modifier: Modifier = Modifier) {
-    Plate(modifier) {
-        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-            Text(value, style = ReadoutTextStyleSmall, color = MaterialTheme.colorScheme.primary)
-            Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
-}
-
-@Composable
 private fun LiftsPanel(sets: List<com.bharath.homeforge.data.LoggedSet>) {
     val history = remember(sets) { buildHistory(sets) }
     val names = remember(history) { history.keys.sorted() }
@@ -140,9 +131,11 @@ private fun LiftsPanel(sets: List<com.bharath.homeforge.data.LoggedSet>) {
     val current = selected?.takeIf { it in history } ?: names.firstOrNull()
 
     if (current == null) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Log a workout to see your progress here.")
-        }
+        EmptyState(
+            icon = Icons.Filled.ShowChart,
+            title = "No progress yet",
+            message = "Log a workout from the Log tab and your lifts will chart here.",
+        )
         return
     }
 
@@ -185,6 +178,14 @@ private fun LiftsPanel(sets: List<com.bharath.homeforge.data.LoggedSet>) {
                     LineChart(values)
                 }
             }
+        }
+        item {
+            Text(
+                "Recent sessions",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp),
+            )
         }
         items(points.reversed()) { point -> SessionRow(point, weighted) }
     }
@@ -294,6 +295,20 @@ private fun LineChart(values: List<Float>) {
                 val p = point(i)
                 if (i == 0) path.moveTo(p.x, p.y) else path.lineTo(p.x, p.y)
             }
+            val fill = Path().apply {
+                addPath(path)
+                lineTo(point(values.lastIndex).x, size.height)
+                lineTo(point(0).x, size.height)
+                close()
+            }
+            drawPath(
+                fill,
+                brush = Brush.verticalGradient(
+                    colors = listOf(color.copy(alpha = 0.28f), color.copy(alpha = 0f)),
+                    startY = 0f,
+                    endY = size.height,
+                ),
+            )
             drawPath(path, color, style = Stroke(width = 3.dp.toPx()))
         }
         values.indices.forEach { drawCircle(color, radius = 5.dp.toPx(), center = point(it)) }

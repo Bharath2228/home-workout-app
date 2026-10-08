@@ -117,13 +117,16 @@ private val LightColors = lightColorScheme(
     error = Forge.rustErrorDay,
 )
 
-/** Square-edged throughout: nothing above a small corner radius, so plates read as stamped metal, not soft cards. */
+/**
+ * Softened from the original hairline-square "stamped metal" corners, which read as dated rather
+ * than deliberate once paired with flat, borderless surfaces. Still crisp, not pill-shaped.
+ */
 private val ForgeShapes = Shapes(
-    extraSmall = RoundedCornerShape(2.dp),
-    small = RoundedCornerShape(4.dp),
-    medium = RoundedCornerShape(6.dp),
-    large = RoundedCornerShape(8.dp),
-    extraLarge = RoundedCornerShape(12.dp),
+    extraSmall = RoundedCornerShape(6.dp),
+    small = RoundedCornerShape(10.dp),
+    medium = RoundedCornerShape(14.dp),
+    large = RoundedCornerShape(18.dp),
+    extraLarge = RoundedCornerShape(28.dp),
 )
 
 private val baseline = Typography()

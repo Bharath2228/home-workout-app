@@ -40,12 +40,16 @@ object PlateLoader {
 
     fun describe(equipment: Equipment, rig: Rig, targetKg: Double): String? {
         val plates = platesFor(equipment, rig, targetKg) ?: return null
-        val label = when (rig) {
-            Rig.BARBELL -> "Per side"
-            Rig.DUMBBELL_PAIR -> "Per dumbbell"
-            Rig.SINGLE_DUMBBELL -> "On the dumbbell"
+        val list = if (plates.isEmpty()) "no plates" else plates.joinToString(" + ") { format(it) }
+        return when (rig) {
+            // One side of the bar; you load the identical mirror on the other side to balance it.
+            Rig.BARBELL -> "Per side: $list"
+            // Short for "split this evenly across both ends of the one dumbbell" — it's the total
+            // for that dumbbell, not one side, but spelling that out every time doesn't fit on a
+            // single line, so "Both ends" carries the distinction instead.
+            Rig.DUMBBELL_PAIR -> "Both ends: $list"
+            Rig.SINGLE_DUMBBELL -> "Both ends: $list"
         }
-        return if (plates.isEmpty()) "$label: no plates" else "$label: ${plates.joinToString(" + ") { format(it) }}"
     }
 
     private fun format(kg: Double): String = if (kg == kg.toLong().toDouble()) kg.toLong().toString() else kg.toString()

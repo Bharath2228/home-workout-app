@@ -5,11 +5,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.PrimaryScrollableTabRow
@@ -73,30 +78,6 @@ fun levelText(status: LevelStatus): String {
 }
 
 @Composable
-fun LevelAndGearRow(
-    status: LevelStatus,
-    noEquipment: Boolean,
-    onNoEquipmentChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(levelText(status), style = MaterialTheme.typography.bodyMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(
-                selected = !noEquipment,
-                onClick = { onNoEquipmentChange(false) },
-                label = { Text("Plates and rods") },
-            )
-            FilterChip(
-                selected = noEquipment,
-                onClick = { onNoEquipmentChange(true) },
-                label = { Text("No equipment") },
-            )
-        }
-    }
-}
-
-@Composable
 fun LevelUpDialog(level: Level, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -111,24 +92,65 @@ fun LevelUpDialog(level: Level, onDismiss: () -> Unit) {
     )
 }
 
+/**
+ * One card replacing what used to be three stacked blocks (plan header, level/gear row, day
+ * focus note): the plan, your level and gear mode, and what today's active day is for, with thin
+ * dividers between sections instead of gaps of plain text floating between separate cards.
+ */
 @Composable
-fun PlanHeader(
+fun PlanSummary(
     program: Split,
     headline: String,
+    rotationText: String?,
+    status: LevelStatus,
+    noEquipment: Boolean,
+    onNoEquipmentChange: (Boolean) -> Unit,
+    active: ActiveDay,
     modifier: Modifier = Modifier,
     onChangePlan: (() -> Unit)? = null,
     onOpenCalendar: (() -> Unit)? = null,
 ) {
+    val divider = @Composable { HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant) }
     Plate(modifier.fillMaxWidth(), accent = PlateAccent.EMBER) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Your plan: ${program.label}", style = MaterialTheme.typography.titleMedium)
-            Text(headline, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(program.schedule, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Filled.CalendarMonth, contentDescription = null, modifier = Modifier.size(20.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(program.label, style = MaterialTheme.typography.titleMedium)
+                    Text(headline, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            if (rotationText != null) {
+                Text(rotationText, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             if (onChangePlan != null || onOpenCalendar != null) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (onOpenCalendar != null) OutlinedButton(onClick = onOpenCalendar) { Text("Calendar") }
                     if (onChangePlan != null) OutlinedButton(onClick = onChangePlan) { Text("Change plan") }
                 }
+            }
+            divider()
+            Text(levelText(status), style = MaterialTheme.typography.bodyMedium)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = !noEquipment,
+                    onClick = { onNoEquipmentChange(false) },
+                    label = { Text("With equipment") },
+                )
+                FilterChip(
+                    selected = noEquipment,
+                    onClick = { onNoEquipmentChange(true) },
+                    label = { Text("No equipment") },
+                )
+            }
+            divider()
+            Text(PlanHelper.focusText(active.split, active.dayIndex), style = MaterialTheme.typography.bodyMedium)
+            if (active.split == Split.CORE_DAY) {
+                Text(
+                    "An optional extra for a rest day. It doesn't count toward your rest-day warnings or streak.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }
@@ -149,19 +171,6 @@ fun PlanDayTabs(program: Split, selectedTab: Int, nextDay: Int, onSelect: (Int) 
 }
 
 @Composable
-fun DayInfo(active: ActiveDay, modifier: Modifier = Modifier) {
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(PlanHelper.focusText(active.split, active.dayIndex), style = MaterialTheme.typography.bodyMedium)
-        if (active.split == Split.CORE_DAY) {
-            Text(
-                "An optional extra for a rest day. It doesn't count toward your rest-day warnings or streak.",
-                style = MaterialTheme.typography.bodySmall,
-            )
-        }
-    }
-}
-
-@Composable
 fun ProgramPickerDialog(current: Split, onPick: (Split) -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -173,7 +182,7 @@ fun ProgramPickerDialog(current: Split, onPick: (Split) -> Unit, onDismiss: () -
             ) {
                 Text(
                     "Not sure? Pick by how many days a week you can train: 2 to 3 days, Full body. " +
-                        "3 to 4 days, Push / Pull / Legs. 5 to 6 days, 6-day PPL.",
+                        "5 to 6 days, the body-part split.",
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Split.programs.forEach { program ->

@@ -41,8 +41,8 @@ class PlateLoaderAndWarmUpTest {
     @Test
     fun describeNamesTheSide() {
         assertTrue(PlateLoader.describe(equipment, Rig.BARBELL, 14.0)!!.startsWith("Per side"))
-        assertTrue(PlateLoader.describe(equipment, Rig.DUMBBELL_PAIR, 6.0)!!.startsWith("Per dumbbell"))
-        assertEquals("Per dumbbell: no plates", PlateLoader.describe(equipment, Rig.DUMBBELL_PAIR, 0.0))
+        assertTrue(PlateLoader.describe(equipment, Rig.DUMBBELL_PAIR, 6.0)!!.startsWith("Both ends"))
+        assertEquals("Both ends: no plates", PlateLoader.describe(equipment, Rig.DUMBBELL_PAIR, 0.0))
     }
 
     private val squat = Exercise("Barbell back squat", Movement.SQUAT, Rig.BARBELL, 30.0)

@@ -1,7 +1,7 @@
 package com.bharath.homeforge.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -12,8 +12,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,6 +40,8 @@ import com.bharath.homeforge.domain.Split
 import com.bharath.homeforge.ui.HistoryViewModel
 import com.bharath.homeforge.ui.durationText
 import com.bharath.homeforge.ui.formatKg
+import com.bharath.homeforge.ui.theme.BackHeader
+import com.bharath.homeforge.ui.theme.EmptyState
 import com.bharath.homeforge.ui.theme.Plate
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -54,17 +56,14 @@ fun HistoryScreen(onBack: () -> Unit, vm: HistoryViewModel = viewModel()) {
     var pendingDelete by remember { mutableStateOf<WorkoutSession?>(null) }
 
     Column(Modifier.fillMaxSize().padding(top = 8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-            }
-            Text("Workouts", style = MaterialTheme.typography.headlineMedium)
-        }
+        BackHeader("Workouts", onBack)
 
         if (sessions.isEmpty()) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No workouts logged yet.")
-            }
+            EmptyState(
+                icon = Icons.Filled.History,
+                title = "No workouts yet",
+                message = "Finish a workout from the Log tab and it will show up here.",
+            )
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -135,8 +134,10 @@ private fun SessionCard(
                     Icon(Icons.Filled.Delete, contentDescription = "Delete workout")
                 }
             }
-            if (expanded) {
-                sets.forEach { set -> SetEditRow(set, onSaveSet, onDeleteSet) }
+            AnimatedVisibility(visible = expanded) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    sets.forEach { set -> SetEditRow(set, onSaveSet, onDeleteSet) }
+                }
             }
         }
     }

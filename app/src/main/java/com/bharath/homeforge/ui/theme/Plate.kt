@@ -17,10 +17,11 @@ import androidx.compose.ui.unit.dp
 enum class PlateAccent { EMBER, SPARK, NONE }
 
 /**
- * HomeForge's one card motif, used everywhere a Material `Card` would otherwise appear: a flat,
- * square-edged surface with a hairline border. Content that's genuinely a working exercise or a
- * warm-up gets a colored top edge naming it as such; plain, same-as-its-neighbors content (a list
- * row, a settings block) stays quiet, so the accent reads as a signal instead of wallpaper.
+ * HomeForge's one card motif, used everywhere a Material `Card` would otherwise appear: a lifted
+ * surface with a soft shadow and a faint hairline edge, instead of a flat fill that blends into
+ * the screen behind it. Content that's genuinely a working exercise or a warm-up gets a colored
+ * top edge naming it as such; plain, same-as-its-neighbors content (a list row, a settings block)
+ * stays quiet, so the accent reads as a signal instead of wallpaper.
  */
 @Composable
 fun Plate(
@@ -31,7 +32,7 @@ fun Plate(
     onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    val border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.6f))
+    val border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
     val body: @Composable () -> Unit = {
         Column {
             if (accent != PlateAccent.NONE) {
@@ -53,6 +54,7 @@ fun Plate(
             color = containerColor,
             contentColor = contentColor,
             border = border,
+            shadowElevation = 3.dp,
             content = body,
         )
     } else {
@@ -62,6 +64,7 @@ fun Plate(
             color = containerColor,
             contentColor = contentColor,
             border = border,
+            shadowElevation = 3.dp,
             content = body,
         )
     }

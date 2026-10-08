@@ -10,12 +10,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.bharath.homeforge.domain.ExerciseMediaLibrary
+import com.bharath.homeforge.ui.theme.BackHeader
 
 @Composable
 fun CreditsScreen(onBack: () -> Unit) {
@@ -32,12 +33,7 @@ fun CreditsScreen(onBack: () -> Unit) {
     val credits = remember { ExerciseMediaLibrary.all.entries.sortedBy { it.key } }
 
     Column(Modifier.fillMaxSize().padding(top = 8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-            }
-            Text("Picture credits", style = MaterialTheme.typography.headlineMedium)
-        }
+        BackHeader("Picture credits", onBack)
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
@@ -53,7 +49,7 @@ fun CreditsScreen(onBack: () -> Unit) {
                 )
             }
             items(credits, key = { it.key }) { (exercise, media) ->
-                Column(
+                Row(
                     Modifier
                         .fillMaxWidth()
                         .clickable {
@@ -61,12 +57,20 @@ fun CreditsScreen(onBack: () -> Unit) {
                                 context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(media.credit.sourceUrl)))
                             }
                         },
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(exercise, style = MaterialTheme.typography.titleSmall)
-                    Text(
-                        "${media.credit.author}, ${media.credit.license}",
-                        style = MaterialTheme.typography.bodySmall,
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(exercise, style = MaterialTheme.typography.titleSmall)
+                        Text(
+                            "${media.credit.author}, ${media.credit.license}",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                    Icon(
+                        Icons.Filled.OpenInNew,
+                        contentDescription = "Open source page",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp),
                     )
                 }
             }

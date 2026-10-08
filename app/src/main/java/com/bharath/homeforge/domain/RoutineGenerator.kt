@@ -14,17 +14,10 @@ enum class Split(
         "Beginners, or anyone who can train 2 to 3 days a week.",
         "3 days a week with a rest day between, such as Monday, Wednesday and Friday.",
     ),
-    PUSH_PULL_LEGS(
-        "Push / Pull / Legs",
-        listOf("Push", "Pull", "Legs"),
-        "Pushing muscles, pulling muscles and legs each get their own day.",
-        "Lifters who can train 3 to 4 days a week and want more work per muscle.",
-        "Do them in order and repeat: Push, Pull, Legs, then Push again.",
-    ),
-    SIX_DAY_PPL(
-        "6-day PPL",
-        listOf("Push 1", "Pull 1", "Legs 1", "Push 2", "Pull 2", "Legs 2"),
-        "Push, pull and legs twice a week, with different exercises the second time.",
+    BODY_PART_SPLIT(
+        "Body-part split",
+        listOf("Chest", "Back", "Legs", "Shoulders", "Arms", "Core"),
+        "One body part gets your full focus each day, six days a week.",
         "Experienced lifters who can train 5 to 6 days a week and recover well.",
         "6 days a week with one rest day. Do not skip your rest day.",
     ),
@@ -41,7 +34,7 @@ enum class Split(
 
     companion object {
         /** The plans a user can follow. The core day is an extra, not a plan. */
-        val programs: List<Split> = listOf(FULL_BODY, PUSH_PULL_LEGS, SIX_DAY_PPL)
+        val programs: List<Split> = listOf(FULL_BODY, BODY_PART_SPLIT)
     }
 }
 
@@ -97,67 +90,61 @@ object RoutineGenerator {
                 Slot(Movement.CORE, 3, 12..15, pick = 2),
             )
         }
-        Split.PUSH_PULL_LEGS -> when (dayIndex) {
+        Split.BODY_PART_SPLIT -> when (dayIndex) {
+            // Chest
             0 -> listOf(
                 Slot(Movement.HORIZONTAL_PUSH, 4, 6..8),
-                Slot(Movement.VERTICAL_PUSH, 3, 8..10),
                 Slot(Movement.HORIZONTAL_PUSH, 3, 10..12, pick = 1),
-                Slot(Movement.SHOULDER_ISOLATION, 3, 12..15),
+                Slot(Movement.VERTICAL_PUSH, 3, 10..12),
                 Slot(Movement.TRICEP, 3, 10..12),
                 Slot(Movement.TRICEP, 2, 10..12, pick = 1),
-                Slot(Movement.CORE, 3, 12..15, pick = 3),
+                Slot(Movement.CORE, 3, 12..15, pick = 0),
             )
+            // Back
             1 -> listOf(
                 Slot(Movement.HORIZONTAL_PULL, 4, 6..8),
                 Slot(Movement.HORIZONTAL_PULL, 3, 10..12, pick = 1),
                 Slot(Movement.HINGE, 3, 8..10),
-                Slot(Movement.SHOULDER_ISOLATION, 3, 12..15, pick = 1),
                 Slot(Movement.BICEP, 3, 8..10),
                 Slot(Movement.BICEP, 2, 10..12, pick = 1),
-                Slot(Movement.CORE, 3, 12..15, pick = 4),
+                Slot(Movement.CORE, 3, 12..15, pick = 1),
             )
-            else -> listOf(
+            // Legs
+            2 -> listOf(
                 Slot(Movement.SQUAT, 4, 6..8),
                 Slot(Movement.HINGE, 3, 8..10, pick = 1),
                 Slot(Movement.LUNGE, 3, 10..12),
                 Slot(Movement.SQUAT, 3, 10..12, pick = 1),
                 Slot(Movement.CALF, 4, 12..15),
-                Slot(Movement.CORE, 3, 30..45),
+                Slot(Movement.CORE, 3, 12..15, pick = 2),
+            )
+            // Shoulders
+            3 -> listOf(
+                Slot(Movement.VERTICAL_PUSH, 4, 6..8),
+                Slot(Movement.VERTICAL_PUSH, 3, 10..12, pick = 1),
+                Slot(Movement.SHOULDER_ISOLATION, 3, 12..15),
+                Slot(Movement.SHOULDER_ISOLATION, 3, 12..15, pick = 1),
+                Slot(Movement.TRICEP, 2, 10..12),
+                Slot(Movement.CORE, 3, 12..15, pick = 3),
+            )
+            // Arms
+            4 -> listOf(
+                Slot(Movement.BICEP, 3, 8..10),
+                Slot(Movement.BICEP, 3, 10..12, pick = 1),
+                Slot(Movement.TRICEP, 3, 8..10),
+                Slot(Movement.TRICEP, 3, 10..12, pick = 1),
+                Slot(Movement.CORE, 3, 12..15, pick = 4),
+            )
+            // Core (and calves, which otherwise only show up on leg day)
+            else -> listOf(
+                Slot(Movement.CORE, 4, 12..15, pick = 5),
+                Slot(Movement.CORE, 3, 30..45, pick = 6),
+                Slot(Movement.CALF, 3, 12..15, pick = 1),
+                Slot(Movement.CORE, 3, 12..15, pick = 7),
+                Slot(Movement.CORE, 3, 12..15, pick = 8),
             )
         }
-        Split.SIX_DAY_PPL ->
-            if (dayIndex < 3) slots(Split.PUSH_PULL_LEGS, dayIndex) else sixDaySecondRound(dayIndex)
         Split.CORE_DAY -> List(6) { Slot(Movement.CORE, 3, 12..15, pick = it) }
-    }
-
-    /** Days 4-6 repeat push/pull/legs with different exercise variations. */
-    private fun sixDaySecondRound(dayIndex: Int): List<Slot> = when (dayIndex) {
-        3 -> listOf(
-            Slot(Movement.VERTICAL_PUSH, 4, 6..8),
-            Slot(Movement.HORIZONTAL_PUSH, 3, 8..10, pick = 2),
-            Slot(Movement.VERTICAL_PUSH, 3, 10..12, pick = 1),
-            Slot(Movement.SHOULDER_ISOLATION, 3, 12..15, pick = 1),
-            Slot(Movement.TRICEP, 3, 10..12, pick = 1),
-            Slot(Movement.TRICEP, 2, 10..12),
-            Slot(Movement.CORE, 3, 12..15, pick = 5),
-        )
-        4 -> listOf(
-            Slot(Movement.HORIZONTAL_PULL, 4, 6..8, pick = 2),
-            Slot(Movement.HORIZONTAL_PULL, 3, 10..12, pick = 3),
-            Slot(Movement.HINGE, 3, 8..10, pick = 2),
-            Slot(Movement.SHOULDER_ISOLATION, 3, 12..15),
-            Slot(Movement.BICEP, 3, 8..10, pick = 1),
-            Slot(Movement.BICEP, 2, 10..12),
-            Slot(Movement.CORE, 3, 12..15, pick = 6),
-        )
-        else -> listOf(
-            Slot(Movement.SQUAT, 4, 6..8, pick = 2),
-            Slot(Movement.HINGE, 3, 8..10, pick = 3),
-            Slot(Movement.LUNGE, 3, 10..12, pick = 1),
-            Slot(Movement.SQUAT, 3, 10..12, pick = 3),
-            Slot(Movement.CALF, 4, 12..15, pick = 1),
-            Slot(Movement.CORE, 3, 10..15, pick = 1),
-        )
     }
 
     /** [pickOffsets] maps slot index to extra rotation used when the user swaps an exercise. */
