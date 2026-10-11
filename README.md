@@ -29,7 +29,8 @@ the phone, so it works offline.
 - Exercise variations rotate every 4 weeks. You can also swap any exercise yourself.
 
 ### Exercises
-- 79 exercises across squat, hinge, lunge, push, pull, biceps, triceps, shoulders, core and calves.
+- 96 exercises across squat, hinge, lunge, push, horizontal pull, vertical (lat) pull, biceps, triceps,
+  shoulders, core and calves, each a genuine beginner-to-advanced progression rather than an arbitrary list.
 - Step-by-step instructions, form cues and common mistakes for every exercise.
 - Pictures for 22 exercises, with credits (see below), and a button that opens a video search for any exercise.
 

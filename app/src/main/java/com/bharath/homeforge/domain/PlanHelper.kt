@@ -26,6 +26,7 @@ object PlanHelper {
         Movement.HORIZONTAL_PUSH -> listOf("chest")
         Movement.VERTICAL_PUSH -> listOf("shoulders")
         Movement.HORIZONTAL_PULL -> listOf("back")
+        Movement.VERTICAL_PULL -> listOf("lats")
         Movement.BICEP -> listOf("biceps")
         Movement.TRICEP -> listOf("triceps")
         Movement.SHOULDER_ISOLATION -> listOf("shoulders")

@@ -198,6 +198,7 @@ class HealthConnectManager(private val context: Context) {
             }
         Movement.VERTICAL_PUSH -> ExerciseSegment.EXERCISE_SEGMENT_TYPE_SHOULDER_PRESS
         Movement.HORIZONTAL_PULL -> ExerciseSegment.EXERCISE_SEGMENT_TYPE_DUMBBELL_ROW
+        Movement.VERTICAL_PULL -> ExerciseSegment.EXERCISE_SEGMENT_TYPE_OTHER_WORKOUT
         Movement.BICEP -> ExerciseSegment.EXERCISE_SEGMENT_TYPE_ARM_CURL
         Movement.TRICEP -> ExerciseSegment.EXERCISE_SEGMENT_TYPE_WEIGHTLIFTING
         Movement.SHOULDER_ISOLATION -> ExerciseSegment.EXERCISE_SEGMENT_TYPE_LATERAL_RAISE

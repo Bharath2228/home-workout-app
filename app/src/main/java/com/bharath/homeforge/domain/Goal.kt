@@ -17,6 +17,7 @@ object GoalProfile {
         Movement.HORIZONTAL_PUSH,
         Movement.VERTICAL_PUSH,
         Movement.HORIZONTAL_PULL,
+        Movement.VERTICAL_PULL,
     )
 
     fun reps(goal: Goal, movement: Movement, base: IntRange, timed: Boolean): IntRange {

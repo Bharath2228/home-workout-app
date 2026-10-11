@@ -11,7 +11,7 @@ object GeneralWarmUp {
 
     private val lower = setOf(Movement.SQUAT, Movement.HINGE, Movement.LUNGE, Movement.CALF)
     private val upperPush = setOf(Movement.HORIZONTAL_PUSH, Movement.VERTICAL_PUSH, Movement.TRICEP, Movement.SHOULDER_ISOLATION)
-    private val upperPull = setOf(Movement.HORIZONTAL_PULL, Movement.BICEP)
+    private val upperPull = setOf(Movement.HORIZONTAL_PULL, Movement.VERTICAL_PULL, Movement.BICEP)
     private val core = setOf(Movement.CORE)
 
     private val lowerMoves = listOf(
@@ -52,6 +52,7 @@ object WarmUp {
         Movement.HORIZONTAL_PUSH,
         Movement.VERTICAL_PUSH,
         Movement.HORIZONTAL_PULL,
+        Movement.VERTICAL_PULL,
     )
 
     private const val MIN_WORKING_KG = 10.0

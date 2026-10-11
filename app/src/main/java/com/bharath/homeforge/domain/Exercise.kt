@@ -7,6 +7,7 @@ enum class Movement(val label: String) {
     HORIZONTAL_PUSH("Horizontal push"),
     VERTICAL_PUSH("Vertical push"),
     HORIZONTAL_PULL("Horizontal pull"),
+    VERTICAL_PULL("Vertical pull"),
     BICEP("Biceps"),
     TRICEP("Triceps"),
     SHOULDER_ISOLATION("Shoulder isolation"),
@@ -98,11 +99,27 @@ object ExerciseLibrary {
         Exercise("Table inverted row", Movement.HORIZONTAL_PULL, null, level = I, prop = "a very sturdy table"),
         Exercise("Feet-elevated inverted row", Movement.HORIZONTAL_PULL, null, level = A, prop = "a very sturdy table and a chair"),
 
+        // Vertical pull (lats). Real vertical pulling needs an overhead bar, so the equipment-free
+        // beginner steps are holds and partial reps, not full reps — that's a genuine beginner
+        // regression (building grip and shoulder-blade control), not padding. The one loadable
+        // option that needs no bar at all is the dumbbell pullover.
+        Exercise("Dumbbell pullover", Movement.VERTICAL_PULL, Rig.SINGLE_DUMBBELL, 8.0, level = B),
+        Exercise("Dead hang", Movement.VERTICAL_PULL, null, timed = true, level = B, prop = "a pull-up bar"),
+        Exercise("Scapular pull-up", Movement.VERTICAL_PULL, null, level = B, prop = "a pull-up bar"),
+        Exercise("Negative pull-up", Movement.VERTICAL_PULL, null, level = I, prop = "a pull-up bar"),
+        Exercise("Chin-up", Movement.VERTICAL_PULL, null, level = I, prop = "a pull-up bar"),
+        Exercise("Pull-up", Movement.VERTICAL_PULL, null, level = A, prop = "a pull-up bar"),
+        Exercise("Wide-grip pull-up", Movement.VERTICAL_PULL, null, level = A, prop = "a pull-up bar"),
+
         // Biceps
         Exercise("Dumbbell curl", Movement.BICEP, Rig.DUMBBELL_PAIR, 5.0, level = B),
+        Exercise("Hammer curl", Movement.BICEP, Rig.DUMBBELL_PAIR, 5.0, level = B),
         Exercise("Barbell curl", Movement.BICEP, Rig.BARBELL, 15.0, level = B),
         Exercise("Towel curl", Movement.BICEP, null, level = B, prop = "a towel"),
         Exercise("Underhand inverted row", Movement.BICEP, null, level = I, prop = "a very sturdy table"),
+        Exercise("Concentration curl", Movement.BICEP, Rig.SINGLE_DUMBBELL, 5.0, level = I),
+        Exercise("Cross-body hammer curl", Movement.BICEP, Rig.DUMBBELL_PAIR, 5.0, level = I),
+        Exercise("Zottman curl", Movement.BICEP, Rig.DUMBBELL_PAIR, 4.0, level = A),
 
         // Triceps
         Exercise("Overhead triceps extension", Movement.TRICEP, Rig.SINGLE_DUMBBELL, 8.0, level = B),
@@ -116,9 +133,12 @@ object ExerciseLibrary {
         // Shoulder isolation
         Exercise("Lateral raise", Movement.SHOULDER_ISOLATION, Rig.DUMBBELL_PAIR, 3.0, level = B),
         Exercise("Rear delt fly", Movement.SHOULDER_ISOLATION, Rig.DUMBBELL_PAIR, 3.0, level = B),
+        Exercise("Front raise", Movement.SHOULDER_ISOLATION, Rig.DUMBBELL_PAIR, 3.0, level = B),
         Exercise("Plank shoulder tap", Movement.SHOULDER_ISOLATION, null, level = B),
         Exercise("Arm circles", Movement.SHOULDER_ISOLATION, null, level = B),
         Exercise("Pike shoulder tap", Movement.SHOULDER_ISOLATION, null, level = I),
+        Exercise("Single-arm lateral raise", Movement.SHOULDER_ISOLATION, Rig.SINGLE_DUMBBELL, 3.0, level = I),
+        Exercise("Wall handstand hold", Movement.SHOULDER_ISOLATION, null, timed = true, level = A, prop = "a wall"),
 
         // Core
         Exercise("Plank", Movement.CORE, null, timed = true, level = B),
@@ -139,7 +159,10 @@ object ExerciseLibrary {
         // Calves
         Exercise("Dumbbell calf raise", Movement.CALF, Rig.DUMBBELL_PAIR, 8.0, level = B),
         Exercise("Bodyweight calf raise", Movement.CALF, null, level = B),
+        Exercise("Barbell calf raise", Movement.CALF, Rig.BARBELL, 20.0, level = B),
         Exercise("Single-leg calf raise", Movement.CALF, null, level = I),
+        Exercise("Seated calf raise", Movement.CALF, null, level = I, prop = "a sturdy chair"),
+        Exercise("Pogo hop", Movement.CALF, null, timed = true, level = A),
     )
 
     fun forMovement(movement: Movement): List<Exercise> = all.filter { it.movement == movement }

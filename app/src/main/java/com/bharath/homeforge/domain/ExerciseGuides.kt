@@ -747,6 +747,160 @@ object ExerciseGuides {
             cues = listOf("Full range, up and down.", "Slow lowering.", "Use your hand only for balance."),
             mistakes = listOf("Bouncing.", "Rolling your ankle outward.", "Rushing the reps."),
         ),
+        "Barbell calf raise" to guide(
+            steps = listOf(
+                "Rest the bar across your upper back like a squat, feet hip width apart.",
+                "Rise onto your toes as high as you can, squeezing your calves at the top.",
+                "Lower your heels slowly back to the floor and repeat.",
+            ),
+            cues = listOf("Pause at the top.", "Full stretch at the bottom.", "Keep your legs mostly straight."),
+            mistakes = listOf("Bouncing instead of pausing.", "Only moving halfway up.", "Letting the bar roll on your neck."),
+        ),
+        "Seated calf raise" to guide(
+            steps = listOf(
+                "Sit on the edge of a sturdy chair with your feet flat, knees bent to about 90 degrees.",
+                "Press through the balls of your feet to rise onto your toes as high as you can.",
+                "Pause, then lower your heels slowly back down.",
+            ),
+            cues = listOf("Keep your knees bent the whole time.", "Pause at the top.", "Rest your hands on your knees for a little extra resistance."),
+            mistakes = listOf("Straightening your legs, which turns it into a standing raise.", "Bouncing.", "Only moving halfway."),
+        ),
+        "Pogo hop" to guide(
+            steps = listOf(
+                "Stand tall with your feet hip width apart and your hands on your hips.",
+                "Hop up and down off the balls of your feet with quick, small bounces, barely bending your knees.",
+                "Keep your ankles springy and land softly each time, like skipping rope without the rope.",
+            ),
+            cues = listOf("Stay on the balls of your feet.", "Quick ground contact, not a deep landing.", "Keep the hops small and controlled."),
+            mistakes = listOf("Landing flat-footed.", "Bending your knees a lot, which turns it into a squat jump.", "Going so fast your form breaks down."),
+        ),
+        "Dumbbell pullover" to guide(
+            steps = listOf(
+                "Lie on your back, either flat on the floor or with your upper back on a low sturdy support, holding one dumbbell with both hands above your chest.",
+                "Keeping a slight bend in your elbows, lower the dumbbell back over your head until you feel a stretch in your lats and chest.",
+                "Pull the dumbbell back over your chest using your lats, not your arms.",
+            ),
+            cues = listOf("Keep your elbows softly bent, not locked.", "Lead the lowering with your lats, not your arms.", "Brace your core so your lower back doesn't arch."),
+            mistakes = listOf("Lowering so far your lower back arches off the floor.", "Bending your elbows more as you go, turning it into a triceps move.", "Using a weight too heavy to control through the full stretch."),
+        ),
+        "Dead hang" to guide(
+            steps = listOf(
+                "Grip a pull-up bar with both hands, a little wider than your shoulders.",
+                "Let your whole body hang straight down, shoulders relaxed away from your ears.",
+                "Hold the position for the target time, breathing steadily.",
+            ),
+            cues = listOf("Let your shoulders stretch down, not shrugged up.", "Keep your core gently braced so you don't swing.", "Breathe normally, don't hold your breath."),
+            mistakes = listOf("Shrugging your shoulders up to your ears.", "Swinging your body for momentum.", "Letting go before the target time out of grip fatigue instead of building it up over sessions."),
+        ),
+        "Scapular pull-up" to guide(
+            steps = listOf(
+                "Grip a pull-up bar with both hands, a little wider than your shoulders, and hang with straight arms.",
+                "Without bending your elbows, pull your shoulder blades down and together, lifting your body an inch or two.",
+                "Lower back down under control until your shoulder blades are relaxed again, then repeat.",
+            ),
+            cues = listOf("Arms stay straight the whole time.", "Think 'shoulders down and back', not 'pull with your arms'.", "Small, controlled movement, not a big pull."),
+            mistakes = listOf("Bending your elbows, which turns it into a small pull-up attempt.", "Using momentum to swing yourself up.", "Shrugging up instead of pulling your shoulder blades down."),
+        ),
+        "Negative pull-up" to guide(
+            steps = listOf(
+                "Use a chair or jump to get your chin above a pull-up bar, with an overhand grip a little wider than your shoulders.",
+                "From that top position, lower yourself down as slowly as you can control, aiming for at least 3 to 5 seconds.",
+                "Once your arms are straight, reset from the chair or ground and repeat.",
+            ),
+            cues = listOf("Fight gravity the whole way down.", "Keep your shoulder blades engaged, not shrugged.", "A slow, shaky descent is the point, not a problem."),
+            mistakes = listOf("Dropping fast instead of controlling the lower.", "Starting from a dead hang instead of the top, which skips the hardest and most useful part.", "Kicking or swinging on the way down."),
+        ),
+        "Chin-up" to guide(
+            steps = listOf(
+                "Grip a pull-up bar with an underhand grip, hands shoulder width apart.",
+                "Pull your chest up toward the bar, leading with your chest rather than your chin.",
+                "Lower yourself back down under control until your arms are fully straight, then repeat.",
+            ),
+            cues = listOf("Lead with your chest, not your chin.", "Pull your elbows down and back.", "Full lockout at the bottom between reps."),
+            mistakes = listOf("Only moving the top half of the range.", "Kicking your legs for momentum.", "Letting your shoulders shrug up to your ears at the bottom."),
+        ),
+        "Pull-up" to guide(
+            steps = listOf(
+                "Grip a pull-up bar with an overhand grip, hands a little wider than your shoulders.",
+                "Pull your chin above the bar, keeping your core braced and legs still.",
+                "Lower yourself back down under control until your arms are fully straight, then repeat.",
+            ),
+            cues = listOf("Pull your elbows down toward your hips.", "Keep your body tight, not swinging.", "Full lockout at the bottom."),
+            mistakes = listOf("Kipping or swinging to gain momentum.", "Only getting halfway up.", "Rushing the lowering instead of controlling it."),
+        ),
+        "Wide-grip pull-up" to guide(
+            steps = listOf(
+                "Grip a pull-up bar with an overhand grip, noticeably wider than your shoulders.",
+                "Pull your chest up toward the bar, driving your elbows down and out.",
+                "Lower yourself back down under control until your arms are fully straight, then repeat.",
+            ),
+            cues = listOf("Think elbows to ribs.", "Keep your core braced so your legs don't swing.", "Full lockout at the bottom between reps."),
+            mistakes = listOf("Gripping so wide your range of motion shrinks.", "Swinging for momentum.", "Only lowering halfway before the next rep."),
+        ),
+        "Hammer curl" to guide(
+            steps = listOf(
+                "Hold a dumbbell in each hand at your sides, palms facing your body.",
+                "Curl both dumbbells up toward your shoulders, keeping your palms facing in the whole time.",
+                "Lower slowly back to the start and repeat.",
+            ),
+            cues = listOf("Elbows stay pinned at your sides.", "Palms face in throughout, not rotating.", "Control the lowering."),
+            mistakes = listOf("Swinging your body to help the lift.", "Letting your elbows drift forward.", "Rushing the lowering."),
+        ),
+        "Concentration curl" to guide(
+            steps = listOf(
+                "Sit on a sturdy chair with your feet wide, holding one dumbbell, and brace the back of that arm against the inside of your thigh.",
+                "Curl the dumbbell up toward your shoulder, keeping your upper arm pinned against your leg.",
+                "Lower slowly until your arm is straight. Finish all reps, then switch sides.",
+            ),
+            cues = listOf("Upper arm stays locked against your thigh.", "Slow and controlled, no swinging.", "Squeeze at the top."),
+            mistakes = listOf("Letting your elbow drift off your leg.", "Using your shoulder to help lift the weight.", "Rushing through reps."),
+        ),
+        "Cross-body hammer curl" to guide(
+            steps = listOf(
+                "Hold a dumbbell in each hand at your sides, palms facing your body.",
+                "Curl one dumbbell up and across your body toward the opposite shoulder, keeping your palm facing in.",
+                "Lower slowly back to the start, then repeat with the other arm, alternating sides.",
+            ),
+            cues = listOf("Keep your elbow close to your body as it crosses.", "Palm stays facing in the whole time.", "Control the lowering on both sides."),
+            mistakes = listOf("Swinging your torso to help the curl.", "Letting the moving elbow flare away from your body.", "Rushing one side to get to the other."),
+        ),
+        "Zottman curl" to guide(
+            steps = listOf(
+                "Hold a dumbbell in each hand at your sides, palms facing forward.",
+                "Curl both dumbbells up toward your shoulders like a normal curl, palms facing you at the top.",
+                "At the top, rotate your wrists so your palms face forward, then lower slowly in that reversed grip.",
+                "Rotate your wrists back to face forward once your arms are straight, and repeat.",
+            ),
+            cues = listOf("Curl up normally, lower with palms turned down.", "The slow, reversed lowering is the whole point.", "Keep your elbows pinned at your sides throughout."),
+            mistakes = listOf("Rushing the reversed lowering instead of controlling it.", "Forgetting to rotate your wrists at the top.", "Using a weight too heavy to control the turned-down lowering."),
+        ),
+        "Front raise" to guide(
+            steps = listOf(
+                "Hold a dumbbell in each hand in front of your thighs, palms facing your body.",
+                "Keeping a slight bend in your elbows, raise both dumbbells straight out in front of you to about shoulder height.",
+                "Lower slowly back to the start and repeat.",
+            ),
+            cues = listOf("Lead with your knuckles, not your elbows.", "Stop at shoulder height, don't go higher.", "Control the lowering, don't drop it."),
+            mistakes = listOf("Swinging the weight up with your back.", "Shrugging your shoulders up toward your ears.", "Raising past shoulder height, which shifts the work off your shoulders."),
+        ),
+        "Single-arm lateral raise" to guide(
+            steps = listOf(
+                "Hold one dumbbell at your side, palm facing your body, and stand tall.",
+                "Keeping a slight bend in your elbow, raise the dumbbell out to the side to about shoulder height.",
+                "Lower slowly back to the start. Finish all reps, then switch sides.",
+            ),
+            cues = listOf("Lead with your elbow, not your hand.", "Stop at shoulder height.", "Keep your torso still, no leaning away from the weight."),
+            mistakes = listOf("Leaning your body to swing the weight up.", "Shrugging your shoulder toward your ear.", "Raising above shoulder height."),
+        ),
+        "Wall handstand hold" to guide(
+            steps = listOf(
+                "Start facing away from a wall in a push-up position with your feet close to it, then walk your feet up the wall as you walk your hands in, until your body is close to vertical.",
+                "Press firmly through your hands into the floor, with your head in a neutral position looking at the floor between your hands.",
+                "Hold the position for the target time, breathing steadily, then walk back down the same way you came up.",
+            ),
+            cues = listOf("Press the floor away, don't just hang in the shoulders.", "Keep your core and glutes braced.", "Walk your feet down lower on the wall if you're new to this."),
+            mistakes = listOf("Letting your lower back arch and hips pike away from the wall.", "Holding your breath.", "Kicking up fast instead of walking in under control."),
+        ),
 
         // General warm-up moves. These aren't in ExerciseLibrary, so they never appear in a routine
         // on their own, but the warm-up checklist links to this same guide screen for each one.

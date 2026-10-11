@@ -76,6 +76,7 @@ object RoutineGenerator {
                 Slot(Movement.HINGE, 3, 8..10),
                 Slot(Movement.VERTICAL_PUSH, 3, 8..10),
                 Slot(Movement.HORIZONTAL_PULL, 3, 8..10, pick = 1),
+                Slot(Movement.VERTICAL_PULL, 3, 8..10),
                 Slot(Movement.LUNGE, 3, 10..12),
                 Slot(Movement.TRICEP, 2, 10..12),
                 Slot(Movement.CORE, 3, 10..15, pick = 1),
@@ -91,19 +92,26 @@ object RoutineGenerator {
             )
         }
         Split.BODY_PART_SPLIT -> when (dayIndex) {
-            // Chest
+            // Chest. 3 horizontal-push slots (11 sets/week, chest's only weekly exposure in this
+            // split) clears the ~10 hard-sets-per-week floor the all-push-muscle PPL layout met
+            // by spreading chest across 2 sessions; a 1x/week body-part day has to concentrate it.
             0 -> listOf(
                 Slot(Movement.HORIZONTAL_PUSH, 4, 6..8),
-                Slot(Movement.HORIZONTAL_PUSH, 3, 10..12, pick = 1),
+                Slot(Movement.HORIZONTAL_PUSH, 4, 8..10, pick = 1),
+                Slot(Movement.HORIZONTAL_PUSH, 3, 10..12, pick = 2),
                 Slot(Movement.VERTICAL_PUSH, 3, 10..12),
                 Slot(Movement.TRICEP, 3, 10..12),
                 Slot(Movement.TRICEP, 2, 10..12, pick = 1),
                 Slot(Movement.CORE, 3, 12..15, pick = 0),
             )
-            // Back
+            // Back. Rows (horizontal pull) and lat work (vertical pull) are different muscles
+            // doing different jobs, not duplicate volume — this day was the other one landing
+            // under the weekly-volume floor with rows alone, and had no lat-specific work at all.
             1 -> listOf(
                 Slot(Movement.HORIZONTAL_PULL, 4, 6..8),
-                Slot(Movement.HORIZONTAL_PULL, 3, 10..12, pick = 1),
+                Slot(Movement.HORIZONTAL_PULL, 4, 8..10, pick = 1),
+                Slot(Movement.VERTICAL_PULL, 3, 8..10),
+                Slot(Movement.VERTICAL_PULL, 3, 10..12, pick = 1),
                 Slot(Movement.HINGE, 3, 8..10),
                 Slot(Movement.BICEP, 3, 8..10),
                 Slot(Movement.BICEP, 2, 10..12, pick = 1),
