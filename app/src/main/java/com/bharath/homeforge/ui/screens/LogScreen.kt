@@ -57,6 +57,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -67,6 +68,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -217,6 +219,15 @@ private fun WorkoutPane(
     val warmUpIndex = workout.exercises.indexOfFirst { WarmUp.eligible(it.planned.exercise) }
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     val paused = workout.pausedAt != null
+
+    // Screen stays on for the whole active workout so it doesn't lock mid-set; released as soon
+    // as this pane leaves composition (workout finished, cancelled, or the app is backgrounded).
+    val view = LocalView.current
+    DisposableEffect(Unit) {
+        view.keepScreenOn = true
+        onDispose { view.keepScreenOn = false }
+    }
+
     LaunchedEffect(workout.startedAt, paused) {
         while (!paused) {
             now = System.currentTimeMillis()
