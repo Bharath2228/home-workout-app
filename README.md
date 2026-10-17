@@ -9,8 +9,11 @@ the phone, so it works offline.
 - Enter your plates (weight and count, as the total you own). Add, remove or change them any time.
 - Every suggested weight is one you can really build. Three set-ups are handled: a single dumbbell, a pair of
   dumbbells (both loaded the same) and a barbell (plates mirrored on both sides).
-- A plate guide shows which plates to load, using the fewest plates, for example "Per side: 5 + 1.5".
-- Warm-up sets for the first heavy lift of a workout, built from loads you can make.
+- A **visual Plate Calculator** shows an interactive barbell graphic with colour-coded stacked plates for any
+  target weight. Tap the plate pill on any exercise card (in Routines or during a live workout) to open it and
+  step the weight up or down to find the nearest buildable load.
+- Warm-up sets for the first heavy lift of a workout, built from loads you can make. Tap **+ Add** next to the
+  warm-up suggestion to inject those sets directly into the live log.
 - A general mobility warm-up checklist shown before every training day, and logged with the workout.
 
 ### Plans, calendar and levels
@@ -37,10 +40,13 @@ the phone, so it works offline.
 ### Logging a workout
 - Log weight and reps for each set, with last time's result shown.
 - Add, remove and reorder exercises and sets during a workout.
+- **Add Exercise picker** with a live search bar and muscle-group filter chips (Push, Pull, Legs, Arms,
+  Shoulders, Core) so you can find exercises instantly by name or category.
 - Rate how a set felt (easy, OK, hard) once you tick it done. Weight and rep suggestions use that alongside your
   reps: a hard set holds the weight even if you hit every rep, and an easy set can jump further.
 - Link an exercise to the next one as a superset: no rest timer between them, only after the pair.
-- A rest timer starts when you tick a set, with vibration and a beep when it ends.
+- A rest timer starts when you tick a set, with vibration and a beep when it ends. The countdown also runs on
+  the **lock screen as an ongoing notification** so you can see how long is left without unlocking the phone.
 - Weight, sets and reps adapt to how your last sessions went, and each change shows a short reason: weight up,
   hold, one step lighter, a deload after three stalled sessions, or an extra set once you reach your heaviest load.
 - Pause a workout (phone call, interruption) and resume later; the paused time isn't counted in the length.
@@ -48,9 +54,13 @@ the phone, so it works offline.
 - Edit or delete past workouts and sets.
 - A running timer shows how long the workout has taken. The length is saved with each workout and shown in your
   history, and the start and end times go to Health Connect.
+- A **Workout Complete** celebration dialog appears when you finish, showing total duration, volume lifted
+  (total kg moved), sets completed, and any personal records broken during the session.
 
 ### Progress
 - Charts of your top weight (or total reps) per exercise, and your best set.
+- **Estimated one-rep max (Est. 1RM)** shown alongside your all-time best using the Epley formula
+  (`weight × (1 + reps / 30)`), so you can compare strength across different rep ranges.
 - Personal-record messages when you finish a workout, and a weekly streak.
 - Body weight and measurements (waist, chest, upper arm, thigh) over time.
 - Warnings for six training days in a row, a sharp jump in weekly sets and long breaks.
