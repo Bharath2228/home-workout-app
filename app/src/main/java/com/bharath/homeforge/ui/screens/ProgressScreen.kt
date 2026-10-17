@@ -325,23 +325,47 @@ private fun LiftsPanel(sets: List<com.bharath.homeforge.data.LoggedSet>) {
                         }
 
                         if (best != null) {
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = MaterialTheme.colorScheme.primaryContainer,
-                            ) {
-                                Column(Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
-                                    Text(
-                                        text = "ALL-TIME BEST",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary,
-                                    )
-                                    Text(
-                                        text = if (best.weightKg != null) "${formatKg(best.weightKg)} kg × ${best.reps}" else "${best.reps} reps",
-                                        style = MaterialTheme.typography.labelLarge,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    )
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                ) {
+                                    Column(Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
+                                        Text(
+                                            text = "ALL-TIME BEST",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary,
+                                        )
+                                        Text(
+                                            text = if (best.weightKg != null) "${formatKg(best.weightKg)} kg × ${best.reps}" else "${best.reps} reps",
+                                            style = MaterialTheme.typography.labelLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        )
+                                    }
+                                }
+                                if (best.weightKg != null) {
+                                    val e1RM = PersonalRecords.estimated1RM(best.weightKg, best.reps)
+                                    Surface(
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = MaterialTheme.colorScheme.secondaryContainer,
+                                    ) {
+                                        Column(Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
+                                            Text(
+                                                text = "EST. 1RM",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.secondary,
+                                            )
+                                            Text(
+                                                text = "${formatKg(e1RM)} kg",
+                                                style = MaterialTheme.typography.labelLarge,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }

@@ -6,7 +6,9 @@ object PersonalRecords {
 
     /** Estimated one-rep max (Epley) for weighted sets, plain rep count for bodyweight ones. */
     fun score(effort: Effort): Double =
-        if (effort.weightKg == null) effort.reps.toDouble() else effort.weightKg * (1 + effort.reps / 30.0)
+        if (effort.weightKg == null) effort.reps.toDouble() else estimated1RM(effort.weightKg, effort.reps)
+
+    fun estimated1RM(weightKg: Double, reps: Int): Double = weightKg * (1 + reps / 30.0)
 
     fun best(efforts: List<Effort>): Effort? = efforts.maxByOrNull { score(it) }
 

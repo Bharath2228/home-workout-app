@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -32,6 +34,7 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -41,10 +44,12 @@ import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SentimentDissatisfied
 import androidx.compose.material.icons.filled.SentimentNeutral
 import androidx.compose.material.icons.filled.SentimentSatisfied
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -91,11 +96,14 @@ import com.bharath.homeforge.domain.Equipment
 import com.bharath.homeforge.domain.Exercise
 import com.bharath.homeforge.domain.ExerciseLibrary
 import com.bharath.homeforge.domain.LevelStatus
+import com.bharath.homeforge.domain.Movement
 import com.bharath.homeforge.domain.PlateLoader
+import com.bharath.homeforge.domain.Rig
 import com.bharath.homeforge.domain.ScheduleResult
 import com.bharath.homeforge.domain.Split
 import com.bharath.homeforge.domain.WarmUp
 import com.bharath.homeforge.domain.WarmUpMove
+import com.bharath.homeforge.domain.WarmUpSet
 import com.bharath.homeforge.ui.ExerciseDraft
 import com.bharath.homeforge.ui.LogViewModel
 import com.bharath.homeforge.ui.SetDraft
@@ -157,6 +165,14 @@ fun LogScreen(onOpenExercise: (String) -> Unit, vm: LogViewModel = viewModel()) 
             onPause = vm::pause,
             onResume = vm::resume,
             onAutosave = vm::persistActiveWorkout,
+            onAddWarmUpSets = vm::addWarmUpSets,
+        )
+    }
+
+    vm.completedSummary?.let { summary ->
+        WorkoutCompleteDialog(
+            summary = summary,
+            onDismiss = vm::dismissSummary,
         )
     }
 }
@@ -317,8 +333,10 @@ private fun WorkoutPane(
     onPause: () -> Unit,
     onResume: () -> Unit,
     onAutosave: () -> Unit,
+    onAddWarmUpSets: (ExerciseDraft, List<WarmUpSet>) -> Unit,
 ) {
     var picking by remember { mutableStateOf(false) }
+    var visualPlateTarget by remember { mutableStateOf<Pair<Rig, Double>?>(null) }
     val warmUpIndex = workout.exercises.indexOfFirst { WarmUp.eligible(it.planned.exercise) }
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     val paused = workout.pausedAt != null
@@ -566,6 +584,8 @@ private fun WorkoutPane(
                     onSetDone = { onSetDone(exercise) },
                     onInfo = { onOpenExercise(exercise.planned.exercise.name) },
                     onToggleSuperset = { onToggleSuperset(exercise) },
+                    onShowPlates = { rig, kg -> visualPlateTarget = rig to kg },
+                    onAddWarmUpSets = { warmUps -> onAddWarmUpSets(exercise, warmUps) },
                 )
             }
 
@@ -596,6 +616,15 @@ private fun WorkoutPane(
                 picking = false
             },
             onDismiss = { picking = false },
+        )
+    }
+
+    visualPlateTarget?.let { (rig, kg) ->
+        PlateCalculatorDialog(
+            equipment = equipment,
+            rig = rig,
+            initialWeightKg = kg,
+            onDismiss = { visualPlateTarget = null },
         )
     }
 }
@@ -684,40 +713,146 @@ private fun WarmUpCard(
 
 @Composable
 private fun ExercisePicker(noEquipment: Boolean, onPick: (Exercise) -> Unit, onDismiss: () -> Unit) {
+    val categories = listOf("All", "Push", "Pull", "Legs", "Arms", "Shoulders", "Core")
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf("All") }
+
+    fun movementMatchesCategory(movement: Movement, category: String): Boolean = when (category) {
+        "Push" -> movement in listOf(Movement.HORIZONTAL_PUSH, Movement.VERTICAL_PUSH, Movement.TRICEP)
+        "Pull" -> movement in listOf(Movement.HORIZONTAL_PULL, Movement.VERTICAL_PULL, Movement.BICEP)
+        "Legs" -> movement in listOf(Movement.SQUAT, Movement.HINGE, Movement.LUNGE, Movement.CALF)
+        "Arms" -> movement in listOf(Movement.BICEP, Movement.TRICEP)
+        "Shoulders" -> movement == Movement.SHOULDER_ISOLATION
+        "Core" -> movement == Movement.CORE
+        else -> true
+    }
+
+    val filteredExercises = remember(searchQuery, selectedCategory, noEquipment) {
+        ExerciseLibrary.all
+            .filter { !noEquipment || it.equipmentFree }
+            .filter { movementMatchesCategory(it.movement, selectedCategory) }
+            .filter { searchQuery.isBlank() || it.name.contains(searchQuery, ignoreCase = true) }
+            .sortedBy { it.name }
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                "Add Exercise to Workout",
+                "Add Exercise",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
             )
         },
         text = {
-            LazyColumn(Modifier.height(380.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                itemsIndexed(ExerciseLibrary.all.filter { !noEquipment || it.equipmentFree }.sortedBy { it.name }) { _, exercise ->
-                    Surface(
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                // Search bar
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Search exercises…", style = MaterialTheme.typography.bodyMedium) },
+                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = "" }, modifier = Modifier.size(32.dp)) {
+                                Icon(Icons.Filled.Clear, contentDescription = "Clear", modifier = Modifier.size(16.dp))
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                    ),
+                    textStyle = MaterialTheme.typography.bodyMedium,
+                )
+
+                // Category filter chips
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    contentPadding = PaddingValues(horizontal = 2.dp),
+                ) {
+                    items(categories) { cat ->
+                        FilterChip(
+                            selected = selectedCategory == cat,
+                            onClick = { selectedCategory = cat },
+                            label = { Text(cat, style = MaterialTheme.typography.labelMedium) },
+                            shape = RoundedCornerShape(20.dp),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                selectedLabelColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    }
+                }
+
+                // Exercise list
+                if (filteredExercises.isEmpty()) {
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .clickable { onPick(exercise) },
-                        color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.35f),
-                        shape = RoundedCornerShape(10.dp),
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        Row(
-                            Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
+                            Icon(
+                                Icons.Filled.Search,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                                modifier = Modifier.size(36.dp),
+                            )
                             Text(
-                                text = exercise.name,
+                                "No exercises found",
                                 style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
-                            TagPill(
-                                text = exercise.movement.label,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.height(300.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        items(filteredExercises) { exercise ->
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .clickable { onPick(exercise) },
+                                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.35f),
+                                shape = RoundedCornerShape(10.dp),
+                            ) {
+                                Row(
+                                    Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                ) {
+                                    Column(Modifier.weight(1f)) {
+                                        Text(
+                                            text = exercise.name,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                        )
+                                        if (exercise.prop != null) {
+                                            Text(
+                                                text = "Needs: ${exercise.prop}",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                        }
+                                    }
+                                    Spacer(Modifier.width(8.dp))
+                                    TagPill(
+                                        text = exercise.movement.label,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -728,6 +863,7 @@ private fun ExercisePicker(noEquipment: Boolean, onPick: (Exercise) -> Unit, onD
         },
     )
 }
+
 
 @Composable
 private fun ExerciseLog(
@@ -745,6 +881,8 @@ private fun ExerciseLog(
     onSetDone: () -> Unit,
     onInfo: () -> Unit,
     onToggleSuperset: () -> Unit,
+    onShowPlates: (Rig, Double) -> Unit,
+    onAddWarmUpSets: (List<WarmUpSet>) -> Unit,
 ) {
     val planned = exercise.planned
     val unit = if (planned.exercise.timed) "sec" else "reps"
@@ -844,13 +982,27 @@ private fun ExerciseLog(
                             Surface(
                                 shape = RoundedCornerShape(6.dp),
                                 color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .clickable { onShowPlates(rig!!, firstWeight!!) },
                             ) {
-                                Text(
-                                    text = plateText,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                )
+                                Row(
+                                    Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                ) {
+                                    Icon(
+                                        Icons.Filled.FitnessCenter,
+                                        contentDescription = "View plates",
+                                        modifier = Modifier.size(11.dp),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                    Text(
+                                        text = plateText,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
                             }
                         } else if (rig != null && firstWeight != null) {
                             Text(
@@ -861,11 +1013,32 @@ private fun ExerciseLog(
                         }
 
                         if (warmUps.isNotEmpty()) {
-                            Text(
-                                "Warm-up: " + warmUps.joinToString(", ") { "${formatKg(it.weightKg)} kg × ${it.reps}" },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.secondary,
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                Text(
+                                    "Warm-up: " + warmUps.joinToString(", ") { "${formatKg(it.weightKg)} kg × ${it.reps}" },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .clickable { onAddWarmUpSets(warmUps) },
+                                ) {
+                                    Text(
+                                        "+ Add",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.secondary,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    )
+                                }
+                            }
                         }
                     }
                 }

@@ -46,6 +46,8 @@ import com.bharath.homeforge.domain.ScheduleResult
 import com.bharath.homeforge.domain.SetResult
 import com.bharath.homeforge.domain.Split
 import com.bharath.homeforge.domain.WarmUpMove
+import com.bharath.homeforge.domain.WarmUpSet
+import com.bharath.homeforge.reminders.RestTimerNotifier
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
@@ -127,6 +129,13 @@ class LogViewModel(app: Application) : AndroidViewModel(app) {
 
     var message by mutableStateOf<String?>(null)
         private set
+
+    var completedSummary by mutableStateOf<WorkoutSummary?>(null)
+        private set
+
+    fun dismissSummary() {
+        completedSummary = null
+    }
 
     var restRemaining by mutableIntStateOf(0)
         private set
@@ -238,15 +247,31 @@ class LogViewModel(app: Application) : AndroidViewModel(app) {
         persistActiveWorkout()
     }
 
+    fun addWarmUpSets(exercise: ExerciseDraft, warmUps: List<WarmUpSet>) {
+        val newSets = warmUps.map {
+            SetDraft(weight = formatKg(it.weightKg), reps = it.reps.toString())
+        }
+        exercise.sets.addAll(0, newSets)
+        persistActiveWorkout()
+    }
+
     fun startRest(seconds: Int) {
         if (!userPrefsRepo.userPrefs.value.restTimerEnabled || seconds <= 0) return
         restEndsAt = System.currentTimeMillis() + seconds * 1000L
         restJob?.cancel()
         refreshRest()
+        val app = getApplication<Application>()
+        val nextExercise = workout?.exercises?.firstOrNull { ex -> ex.sets.any { !it.done } }?.planned?.exercise?.name
+        RestTimerNotifier.notifyRest(app, restRemaining, nextExercise)
         restJob = viewModelScope.launch {
+            var lastNotified = restRemaining
             while (restRemaining > 0) {
                 delay(250)
                 refreshRest()
+                if (restRemaining != lastNotified) {
+                    lastNotified = restRemaining
+                    RestTimerNotifier.notifyRest(app, restRemaining, nextExercise)
+                }
             }
             alertRestOver()
         }
@@ -256,11 +281,15 @@ class LogViewModel(app: Application) : AndroidViewModel(app) {
         if (restRemaining <= 0) return
         restEndsAt += seconds * 1000L
         refreshRest()
+        val app = getApplication<Application>()
+        val nextExercise = workout?.exercises?.firstOrNull { ex -> ex.sets.any { !it.done } }?.planned?.exercise?.name
+        RestTimerNotifier.notifyRest(app, restRemaining, nextExercise)
     }
 
     fun skipRest() {
         restJob?.cancel()
         restRemaining = 0
+        RestTimerNotifier.cancelRest(getApplication())
     }
 
     fun cancel() {
@@ -268,6 +297,7 @@ class LogViewModel(app: Application) : AndroidViewModel(app) {
         pausedRestRemaining = null
         workout = null
         activeWorkoutStore.clear()
+        RestTimerNotifier.cancelRest(getApplication())
     }
 
     fun finish() {
@@ -308,19 +338,36 @@ class LogViewModel(app: Application) : AndroidViewModel(app) {
                 ),
                 sets,
             )
+            val durationSecs = maxOf(0L, (endedAt - draft.startedAt) / 1000L)
+            val totalVolume = sets.sumOf { (it.weightKg ?: 0.0) * it.reps }
+            val dayName = draft.split.dayNames[draft.dayIndex]
+
             workout = null
             activeWorkoutStore.clear()
 
             val recordText = if (records.isEmpty()) "" else " New PR: ${records.joinToString { effortText(it) }}."
             val saved = "Workout saved (${sets.size} sets, ${durationText(endedAt - draft.startedAt)}).$recordText"
+            var synced = false
             message = if (health.enabled) {
                 runCatching { health.syncSessionIfEnabled(sessionId) }.fold(
-                    onSuccess = { if (it) "$saved Synced to Health Connect." else "$saved Health Connect permission missing, open Settings." },
+                    onSuccess = {
+                        synced = it
+                        if (it) "$saved Synced to Health Connect." else "$saved Health Connect permission missing, open Settings."
+                    },
                     onFailure = { "$saved Health Connect sync failed, retry from Settings." },
                 )
             } else {
                 saved
             }
+
+            completedSummary = WorkoutSummary(
+                title = dayName,
+                durationSeconds = durationSecs,
+                totalSets = sets.size,
+                totalVolumeKg = totalVolume,
+                newRecords = records,
+                syncedToHealthConnect = synced,
+            )
         }
     }
 
@@ -368,6 +415,8 @@ class LogViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun alertRestOver() {
         val context = getApplication<Application>()
+        val nextExercise = workout?.exercises?.firstOrNull { ex -> ex.sets.any { !it.done } }?.planned?.exercise?.name
+        RestTimerNotifier.notifyRestFinished(context, nextExercise)
         runCatching {
             val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
             vibrator.vibrate(VibrationEffect.createOneShot(600, VibrationEffect.DEFAULT_AMPLITUDE))
@@ -463,6 +512,15 @@ class LogViewModel(app: Application) : AndroidViewModel(app) {
         return draft.takeIf { it.exercises.isNotEmpty() }
     }
 }
+
+data class WorkoutSummary(
+    val title: String,
+    val durationSeconds: Long,
+    val totalSets: Int,
+    val totalVolumeKg: Double,
+    val newRecords: List<Effort>,
+    val syncedToHealthConnect: Boolean,
+)
 
 fun formatKg(kg: Double): String =
     if (kg == kg.toLong().toDouble()) kg.toLong().toString() else kg.toString()

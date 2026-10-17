@@ -1,6 +1,7 @@
 package com.bharath.homeforge.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -71,6 +73,7 @@ fun RoutinesScreen(
     val program = userPrefs.program
     var chosenTab by rememberSaveable(program) { mutableStateOf<Int?>(null) }
     var picking by remember { mutableStateOf(false) }
+    var visualPlateTarget by remember { mutableStateOf<Pair<Rig, Double>?>(null) }
 
     val tab = chosenTab ?: nextDay
     val active = activeDay(program, tab)
@@ -123,6 +126,7 @@ fun RoutinesScreen(
                     equipment = equipment,
                     onInfo = { onOpenExercise(item.exercise.name) },
                     onSwap = { vm.swap(active.split, active.dayIndex, item.slotIndex) },
+                    onShowPlates = { rig, kg -> visualPlateTarget = rig to kg },
                 )
             }
         }
@@ -142,6 +146,15 @@ fun RoutinesScreen(
             onDismiss = { picking = false },
         )
     }
+
+    visualPlateTarget?.let { (rig, kg) ->
+        PlateCalculatorDialog(
+            equipment = equipment,
+            rig = rig,
+            initialWeightKg = kg,
+            onDismiss = { visualPlateTarget = null },
+        )
+    }
 }
 
 @Composable
@@ -151,6 +164,7 @@ private fun ExerciseCard(
     equipment: Equipment,
     onInfo: () -> Unit,
     onSwap: () -> Unit,
+    onShowPlates: (Rig, Double) -> Unit,
 ) {
     Plate(
         Modifier.fillMaxWidth(),
@@ -204,21 +218,36 @@ private fun ExerciseCard(
                 }
 
                 val rig = item.exercise.rig
-                val plates = if (rig != null && item.weightKg != null) {
-                    PlateLoader.describe(equipment, rig, item.weightKg)
-                } else null
+                val weightKg = item.weightKg
 
-                if (plates != null) {
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
-                    ) {
-                        Text(
-                            text = plates,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                        )
+                if (rig != null && weightKg != null) {
+                    val plates = PlateLoader.describe(equipment, rig, weightKg)
+                    if (plates != null) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .clickable { onShowPlates(rig, weightKg) },
+                        ) {
+                            Row(
+                                Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                Icon(
+                                    Icons.Filled.FitnessCenter,
+                                    contentDescription = "View plate setup",
+                                    modifier = Modifier.size(11.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Text(
+                                    text = plates,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -257,6 +286,7 @@ private fun ExerciseCard(
         }
     }
 }
+
 
 private fun loadText(item: PlannedExercise): String {
     val kg = item.weightKg ?: return "Bodyweight"
