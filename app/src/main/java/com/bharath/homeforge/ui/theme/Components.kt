@@ -1,6 +1,7 @@
 package com.bharath.homeforge.ui.theme
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,57 +10,118 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
-/** The spacing rhythm used everywhere: one scale instead of ad hoc dp literals per screen. */
+/** The spacing rhythm used everywhere: clean, balanced, athletic scale. */
 object Spacing {
     val screen = 16.dp
     val cardGap = 12.dp
-    val inner = 8.dp
+    val inner = 10.dp
     val micro = 4.dp
+    val section = 24.dp
 }
 
 /**
- * The headline every top-level tab starts with. Keeps the same type, color and padding
- * everywhere instead of each screen hand-rolling its own `Text(..., headlineMedium)`.
+ * Modern header for main app tabs with bold athletic typography.
  */
 @Composable
-fun ScreenHeader(title: String, modifier: Modifier = Modifier, subtitle: String? = null) {
-    Column(modifier.padding(horizontal = Spacing.screen), verticalArrangement = Arrangement.spacedBy(Spacing.micro)) {
-        Text(title, style = MaterialTheme.typography.headlineMedium)
+fun ScreenHeader(
+    title: String,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    badge: String? = null,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.screen, vertical = Spacing.micro),
+        verticalArrangement = Arrangement.spacedBy(Spacing.micro),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            if (badge != null) {
+                TagPill(text = badge, color = MaterialTheme.colorScheme.primary)
+            }
+        }
         if (subtitle != null) {
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
 
-/** The back-arrow-plus-title row used by every screen pushed on top of the tabs. */
+/** Back header with modern circular container icon button and bold title. */
 @Composable
-fun BackHeader(title: String, onBack: () -> Unit, modifier: Modifier = Modifier) {
-    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+fun BackHeader(
+    title: String,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    action: (@Composable () -> Unit)? = null,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(
+            onClick = onBack,
+            colors = IconButtonDefaults.iconButtonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
+                contentColor = MaterialTheme.colorScheme.onSurface,
+            ),
+            modifier = Modifier.size(40.dp),
+        ) {
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                modifier = Modifier.size(20.dp),
+            )
         }
-        Text(title, style = MaterialTheme.typography.headlineSmall)
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier
+                .padding(start = 12.dp)
+                .weight(1f),
+            maxLines = 1,
+        )
+        if (action != null) {
+            action()
+        }
     }
 }
 
 /**
- * A single glanceable number: the live timer, a streak, a PR. Always set in [ReadoutTextStyle]
- * (small variant) so every "number that matters" reads the same way across the app.
+ * Metric card: Icon in a soft rounded badge, bold readout stat, and subtitle label.
  */
 @Composable
 fun StatTile(
@@ -69,44 +131,117 @@ fun StatTile(
     icon: ImageVector? = null,
     valueColor: Color = MaterialTheme.colorScheme.primary,
 ) {
-    Plate(modifier) {
-        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    Plate(
+        modifier = modifier,
+        cornerRadius = 14.dp,
+        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+    ) {
+        Column(
+            Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             if (icon != null) {
-                Icon(icon, contentDescription = null, tint = valueColor, modifier = Modifier.size(18.dp))
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(
+                            color = valueColor.copy(alpha = 0.12f),
+                            shape = RoundedCornerShape(8.dp),
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        tint = valueColor,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
             }
-            Text(value, style = ReadoutTextStyleSmall, color = valueColor)
-            Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                text = value,
+                style = ReadoutTextStyleSmall,
+                color = valueColor,
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
 
-/** A quiet circular step badge ("1", "2", ...) for ordered instructions. */
+/** Modern circular step badge with clear contrast. */
 @Composable
 fun StepBadge(number: Int, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .size(22.dp)
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest, CircleShape),
+            .size(26.dp)
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest, CircleShape)
+            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Text("$number", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        Text(
+            text = "$number",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary,
+        )
     }
 }
 
-/** A small round bullet, used instead of a plain hyphen for cue/mistake lists. */
+/** Small circular bullet for cues and mistakes. */
 @Composable
-fun BulletDot(modifier: Modifier = Modifier) {
+fun BulletDot(
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.primary,
+) {
     Box(
         modifier = modifier
             .padding(top = 7.dp)
-            .size(6.dp)
-            .background(MaterialTheme.colorScheme.primary, CircleShape),
+            .size(7.dp)
+            .background(color, CircleShape),
     )
 }
 
+/** A compact visual tag / pill for muscle groups, rig types, and status */
+@Composable
+fun TagPill(
+    text: String,
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.primary,
+    icon: ImageVector? = null,
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(8.dp),
+        color = color.copy(alpha = 0.12f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.25f)),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            if (icon != null) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(12.dp),
+                )
+            }
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelMedium,
+                color = color,
+            )
+        }
+    }
+}
+
 /**
- * The "nothing here yet" state: an icon, a short message, and an optional single call to action.
- * Used instead of a bare centered [Text] so empty lists feel designed rather than blank.
+ * Designed Empty State with rounded icon container, bold headline, and CTA.
  */
 @Composable
 fun EmptyState(
@@ -118,25 +253,50 @@ fun EmptyState(
     onAction: (() -> Unit)? = null,
 ) {
     Column(
-        modifier = modifier.fillMaxWidth().padding(vertical = 32.dp, horizontal = Spacing.screen),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 40.dp, horizontal = Spacing.screen),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Spacing.inner),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Icon(
-            icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(40.dp),
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .background(
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    CircleShape,
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(32.dp),
+            )
+        }
+        Text(
+            title,
+            style = MaterialTheme.typography.titleLarge,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurface,
         )
-        Text(title, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
         Text(
             message,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 16.dp),
         )
         if (actionLabel != null && onAction != null) {
-            Button(onClick = onAction, modifier = Modifier.padding(top = Spacing.micro)) { Text(actionLabel) }
+            Button(
+                onClick = onAction,
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                modifier = Modifier.padding(top = 8.dp),
+            ) {
+                Text(actionLabel, style = MaterialTheme.typography.labelLarge)
+            }
         }
     }
 }
